@@ -4,7 +4,7 @@
 
 这里基于`React`的方式，我们手动制作了一个最小的`Agent`结构（其实更多的是调用工具），暑假的时候会尝试将`React`结构修改为`SOP`结构。
 
-一步一步手写`Agent`，可能让我对`Agent`的构成和运作更加的了解。以下是`React`论文中一些小例子。
+一步一步手写`Agent`，可以让我们对`Agent`的构成和运作更加的了解。以下是`React`论文中一些小例子。
 
 > 论文：***[ReAct: Synergizing Reasoning and Acting in Language Models](http://arxiv.org/abs/2210.03629)***
 

@@ -1,0 +1,5 @@
+{
+    "internlm2": "path2model",
+    "Qwen2": "path2model",
+    "Qwen2_moe": "path2model"
+}

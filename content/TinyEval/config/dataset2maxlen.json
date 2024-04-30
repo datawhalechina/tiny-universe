@@ -1,0 +1,7 @@
+{
+    "multifieldqa_zh": 64,
+    "multi_news": 512,
+    "trec": 64,
+    "custom_zh": 512,
+    "custom_en": 512
+}

@@ -14,7 +14,7 @@ So, 本项目将逐个为你解开上述的困惑！
 ## 2.Eval都包含哪些流程?
 首先要明确评测任务的基础`pipeline`。下图是评测任务的简要流程： 
 
-<div style="display: flex; justify-content: center;">
+<div align=center>
     <img src="./Eval/docs/compass.png" style="width:70%;">
 </div>
 

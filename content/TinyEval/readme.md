@@ -14,7 +14,10 @@ So, 本项目将逐个为你解开上述的困惑！
 ## 2.Eval都包含哪些流程?
 首先要明确评测任务的基础`pipeline`。下图是评测任务的简要流程： 
 
-![评测图](./Eval/docs/compass.png)  
+<div style="display: flex; justify-content: center;">
+    <img src="./Eval/docs/compass.png" style="width:70%;">
+</div>
+
 
 - 首先，根据目标数据集的任务类型指定合理的评测`metric`.
 - 根据目标数据的形式总结模型引导`prompt`.

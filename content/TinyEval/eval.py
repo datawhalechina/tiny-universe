@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 
 
-from metrics import (
+from Eval.metrics import (
     qa_f1_score,
     qa_f1_zh_score,
     rouge_score,
@@ -41,10 +41,9 @@ def scorer(dataset, predictions, answers, all_classes):
     return round(100 * total_score / len(predictions), 2)
 
 if __name__ == '__main__':
-    os.chdir('/root/constructionGPT/tiny_compass')
     scores = dict()
     args = parse_args()
-    path = f"pred/{args.model}/"
+    path = f"Eval/pred/{args.model}/"
     all_files = os.listdir(path)
     print("Evaluating on:", all_files)
     for file in all_files:
@@ -65,6 +64,6 @@ if __name__ == '__main__':
         scores[dataset] = score
 
     # 保存结果
-    out_path = f"pred/{args.model}/result.json"
+    out_path = f"Eval/pred/{args.model}/result.json"
     with open(out_path, "w") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)

@@ -9,7 +9,7 @@ Qwen的整体架构与Llama2类似，如下图所示:
 - `attention_mask`是用来看见左边、右边，双向等等来设定。
 - 各类下游任务，`Casual`,`seqcls`等，基本都是基础模型`model`后面接对应的`Linear`层，还有损失函数不一样。
 
-# 1.Qwen2Config
+# 1 Qwen2Config
 Qwen2Config中包含一些自定义的超参数，例如`vocab_size`,`hidden_size`,`num_hidden_layers`, `num_attention_heads`等。类似于`dict`可以调用里面的超参数:`config.pad_token_id`。 
 ## 1.1 Qwen2Model 
 ### 1.1.1 初始化
@@ -85,13 +85,13 @@ if output_hidden_states:
 - 如果保存`output_hidden_states`的话，就是第一个为`input_ids`进行`emb`，然后保存到`n-1`层的`decoder_layer`的输出`hs`，再加上最后一层`layer`的输出`hs`进行过`norm`后的`hs`.
 - 最后是以`BaseModelOutputWithPast`的形式输出。
 
-## 1.2Qwen2DecoderLayer
+## 1.2 Qwen2DecoderLayer
 
 <div align=center>
     <img src='./img/decoderlayer.png'>
 </div>
 
-### 1.2.1初始化
+### 1.2.1 初始化
 `layer`三件套:`attn`+`MLP`+`norm`
 
 ```python
@@ -112,7 +112,7 @@ class Qwen2DecoderLayer(nn.Module):
         self.post_attention_layernorm = Qwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 ```
 这里面的`input_layernorm`和`post_attention_layernorm`内容是一样的，只是应用的顺序不一样。
-### 1.1.2
+### 1.1.2 Froward
 可配合图食用，效果更佳:
 - 首先复制一份`hidden_states`为`residual`,然后将`hidden_states`送入`Norm`,再送入`attn`模块。
 - 得到`attn`的输出后，再复制一份`residual`，再将`hidden_states`送入`Norm`，`mlp`，再与`residual`进行相加。最后输出的就是这个`hidden_states`啦。  
@@ -201,7 +201,7 @@ max_position_embeddings (`int`, *optional*, defaults to 32768):
 rope_theta (`float`, *optional*, defaults to 10000.0):
             The base period of the RoPE embeddings.
 ```
-### 1.3.2 forward
+### 1.3.2 Forward
 - 首先将`hidden_states`送入`Linear`中得到`query`、`key`与`value`。
 - 使用旋转位置嵌入操作`rotary_emb`，使用了旋转位置嵌入的余弦和正弦部分，将他们与`query`和`key`相乘，并将结果相加，从而实现旋转位置嵌入的效果。
 - 将`key_states`和`value_states`重复`group`次，再执行`dot attn`操作。
@@ -252,7 +252,7 @@ attn_output = self.o_proj(attn_output)
 return attn_output, attn_weights, past_key_value
 ```
 
-### 1.3.3细节Debug
+### 1.3.3 细节Debug
 #### 1.3.3.1 GQA
 <div align=center>
     <img src='./img/GQA.png'>

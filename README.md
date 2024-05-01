@@ -1,5 +1,5 @@
 <div align=center>
-    <img src="./images/tiny-universe-head.png" >
+    <img src="./images/tiny-universe-head2.png" >
     <h1><strong>大模型白盒子构建指南</strong></h1>
 </div>
 

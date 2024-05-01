@@ -1,6 +1,9 @@
-# Tiny-Universe
+<div align=center>
+    <img src="./images/tiny-universe-head.png" >
+    <h1><strong>大模型白盒子构建指南</strong></h1>
+</div>
 
-&emsp;&emsp;大模型是当下深度学习领域的热点，但现有的大部分大模型教程只在与教给大家如何调用api完成大模型的应用，而很少有人能够从原理层面讲清楚模型结构、RAG、Agent以及Eval。所以本仓库会提供全部手写，不采用调用api的形式，完成大模型的RAG、Agent、Eval任务。
+&emsp;&emsp;大模型是当下深度学习领域的热点，但现有的大部分大模型教程只在与教给大家如何调用api完成大模型的应用，而很少有人能够从原理层面讲清楚模型结构、RAG、Agent 以及 Eval。所以本仓库会提供全部手写，不采用调用api的形式，完成大模型的 RAG 、 Agent 、Eval 任务。
 
 ## 项目受众
 

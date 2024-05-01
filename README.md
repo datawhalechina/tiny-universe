@@ -10,6 +10,7 @@
 
 ### [Qwen-blog](./content/Qwen-blog/)
 初学者在学习LLM时，往往对庞大的代码与各种封装的功能"谈码色变"~  
+
 但其实,LLM的网络架构并没有想象的那么复杂! 本项目以Qwen2为例，带大家深入LLM模型结构内部，以输入tensor为第一视角，带大家经过Model的各个操作块，点亮LLM的"黑匣子"。
 
 ***项目内除了Model内容外，也添加了嵌入模型内部的GQA，ROPE与Attention Mask等机制的细致讲解，促进大家对LLM的全面理解！***

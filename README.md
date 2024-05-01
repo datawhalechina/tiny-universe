@@ -19,7 +19,7 @@
 
 ## 项目结构
 
-### [Qwen-blog](./content/Qwen-blog/)
+### [*Qwen-Blog*](./content/Qwen-blog/)
 
 &emsp;&emsp;初学者在学习LLM时，往往对庞大的代码与各种封装的功能"谈码色变"~  
 
@@ -32,7 +32,7 @@
 </div>
 
 
-### [TinyRAG](./content/TinyRAG/)
+### [*TinyRAG*](./content/TinyRAG/)
 
 &emsp;&emsp;LLM会产生误导性的 “幻觉”，依赖的信息可能过时，处理特定知识时效率不高，缺乏专业领域的深度洞察，同时在推理能力上也有所欠缺。
 
@@ -47,7 +47,7 @@
 </div>
 
 
-### [TinyAgent](./content/TinyAgent/)
+### [*TinyAgent*](./content/TinyAgent/)
 
 &emsp;&emsp;在 ChatGPT 横空出世，夺走 Bert 的桂冠之后，大模型愈发的火热，国内各种模型层出不穷，史称“百模大战”。大模型的能力是毋庸置疑的，但大模型在一些实时的问题上，或是某些专有领域的问题上，可能会显得有些力不从心。因此，我们需要一些工具来为大模型赋能，给大模型一个抓手，让大模型和现实世界发生的事情对齐颗粒度，这样我们就获得了一个更好的用的大模型。
 
@@ -58,7 +58,7 @@
 </div>
 
 
-### [TinyEval](./content/TinyEval)
+### [*TinyEval*](./content/TinyEval)
 
 &emsp;&emsp;随着LLM的推广，越来越多的小伙伴已经熟悉了模型sft微调流程，但是对于微调的结果，尤其是如何判断各大模型在当前数据集上的表现，仍然是一个待解决的问题。并且，对于选则式、判别式、生成式等不同的生成任务，如何才能够客观地评价模型生成质量，仍是一个需要明确的问题。  
 

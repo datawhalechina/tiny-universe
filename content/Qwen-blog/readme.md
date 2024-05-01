@@ -416,7 +416,9 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
     return q_embed, k_embed
 ```
 对应公式：  
-![img](./img/ROPE8.png)
+<div align=center>
+    <img src='./img/ROPE8.png'>
+</div> 
 
 其中，下标t则表示位于同一行，也就是同一`seq_len`，对于相邻的两个元素，
 
@@ -435,7 +437,9 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
 - `value`里面每一个词有128个维度来描述，对于第一个词，由于`attn`为下三角，所以每一个维度都只有第一个非零元素1进行相乘，其他的都是×0。
 - 对于第二行，则是前两个有不同的权值，让`value`的128个维度分别依据这两个的权重，在128个维度上根据前两行，计算得出`output`的第二个词(第二步或者第二行)的128个维度....
 - 第n步则对应有n个权重，用来描述从1到n个步之间的各个关系，进而计算出各个维度。
-![img](./img/Mask3.png)
+<div align=center>
+    <img src='./img/Mask3.png'>
+</div>
 
 ## 1.4 Qwen2 MLP
 

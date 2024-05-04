@@ -112,7 +112,7 @@ class Qwen2DecoderLayer(nn.Module):
         self.post_attention_layernorm = Qwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 ```
 这里面的`input_layernorm`和`post_attention_layernorm`内容是一样的，只是应用的顺序不一样。
-### 1.1.2 Froward
+### 1.1.2 Forward
 可配合图食用，效果更佳:
 - 首先复制一份`hidden_states`为`residual`,然后将`hidden_states`送入`Norm`,再送入`attn`模块。
 - 得到`attn`的输出后，再复制一份`residual`，再将`hidden_states`送入`Norm`，`mlp`，再与`residual`进行相加。最后输出的就是这个`hidden_states`啦。  
@@ -317,12 +317,12 @@ out = out.transpose(1, 2)
 
 概念：通过旋转编码，使得每个token既有相对位置信息，又有绝对位置信息。
 - 既能以自注意力矩阵偏置的形式作用于 $A_{t,s}$,直接反映两个token的相对位置信息，又能拆解到向量 $q_{t}$ 和 $k_{s}$ 上，通过直接编码token的绝对位置实现。
-- RoPE本质是实现对特征向量的旋转操作，如果以二维特征向量举例，对于相邻两个token来说，其对应同一个$\theta$,其定义为:  
+- RoPE本质是实现对特征向量的旋转操作，如果以二维特征向量举例，对于相邻两个token来说，其对应同一个 $\theta$,其定义为:  
 <div align=center>
     <img src='./img/ROPE2.png'>
 </div> 
 
-可得，其本质就是: $q_{t}$,$k_{s}$ 旋转后的结果，就是$q_{t}$,$k_{s}$乘上cos再加上$q_{t}$,$k_{s}$翻转维度并取反一维后乘上sin。
+可得，其本质就是: $q_{t}$, $k_{s}$ 旋转后的结果，就是 $q_{t}$, $k_{s}$乘上cos再加上 $q_{t}$, $k_{s}$翻转维度并取反一维后乘上sin。
 - 对于高纬向量，由于奇、复数维度两两交错实现较为复杂，则现在可简化为将特征维度一切二，如下图所示，在实现过程中对前后各半进行的操作即为rotate_half操作： 
 <div align=center>
     <img src='./img/ROPE3.png'>

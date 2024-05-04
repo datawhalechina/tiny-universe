@@ -51,7 +51,7 @@ def post_init(self):
     self._backward_compatibility_gradient_checkpointing()
 ```
 
-### 1.1.2 Froward
+### 1.1.2 Forward
 在此只对核心主干进行讲解:
 ```python
 inputs_embeds = self.embed_tokens(input_ids)

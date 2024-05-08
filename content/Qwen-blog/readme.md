@@ -470,7 +470,7 @@ class Qwen2MLP(nn.Module):
 ## 1.5 Qwen2RMSNorm
 计算公式:
 
-<img src="/tiny-universe/content/Qwen-blog/img/RMSNorm_formulation.jpg" width="400" height="auto">
+<img src="./img/RMSNorm_formulation.jpg" width="400" height="auto">
 
 其中:
 - $x$是层的输入的`hidden_state`

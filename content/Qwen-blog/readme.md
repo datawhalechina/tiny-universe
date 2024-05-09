@@ -113,7 +113,7 @@ class Qwen2DecoderLayer(nn.Module):
 ```
 这里面的`input_layernorm`和`post_attention_layernorm`内容是一样的，只是应用的顺序不一样。
 ### 1.1.2 Forward
-可配合图食用，效果更佳:
+可配合图使用，效果更佳:
 - 首先复制一份`hidden_states`为`residual`,然后将`hidden_states`送入`Norm`,再送入`attn`模块。
 - 得到`attn`的输出后，再复制一份`residual`，再将`hidden_states`送入`Norm`，`mlp`，再与`residual`进行相加。最后输出的就是这个`hidden_states`啦。  
 

@@ -273,7 +273,7 @@ value = torch.randn(10, 128, 2, 128)
 groups = query.shape[-2] // key.shape[-2]
 ```
 2. 之后进行扩展key，value的操作  
-在`GQA`中，`key`和`value`都要比`query`小`group`倍，但是为在后续做矩阵乘法时方便，我们需要先把`key`和`value`的`head`重复到和`query`相同的维度。方便后续计算。  
+在`GQA`中，`key`和`value`都要比`query`小`group`倍，但是为在后续做矩阵乘法时方便，我们需要先把`key`和`value`的`head`利用expand扩展张量到和`query`相同的维度。方便后续计算。  
 
 ```python
 # 定义输入x， n_rep是需要重复的次数，在这里一般是组数
@@ -304,9 +304,9 @@ out = out.transpose(1, 2)
 ```
 **补充：**   
 **为什么要用expand之后再reshape而不能直接用tensor自带的repeat?** 
-<div align=center>
-    <img src='./img/GQA2.png'>
-</div> 
+- `expand` 方法用于对张量进行扩展，但不实际分配新的内存。它返回的张量与原始张量共享相同的数据
+- `repeat` 方法通过实际复制数据来扩展张量。它返回的新张量不与原始张量共享数据，扩展后的张量占用了更多的内存。
+
 
 #### 1.3.3.2 apply_rotary_pos_emb
 位置编码的含义是对每一个token的每一个dim赋予不同的位置信息。

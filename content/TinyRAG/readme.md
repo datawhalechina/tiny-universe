@@ -265,7 +265,7 @@ from RAG.LLM import OpenAIChat, InternLMChat
 from RAG.Embeddings import JinaEmbedding, ZhipuEmbedding
 
 
-没有保存数据库
+# 没有保存数据库
 docs = ReadFiles('./data').get_content(max_token_len=600, cover_content=150) # 获得data目录下的所有文件内容并分割
 vector = VectorStore(docs)
 embedding = ZhipuEmbedding() # 创建EmbeddingModel

@@ -70,6 +70,8 @@
 
 &emsp;&emsp;***RAG 已经成为 LLM 应用的重要组成部分，但其他RAG项目都基于封装框架提供完整服务，虽然易于使用，却隐藏了 RAG 的底层原理，也难以随心所欲地魔改升级。本项目抛弃高度封装的 RAG 框架，手搓一个从零开始的RAG项目，帮助学习者更好地理解RAG的原理。***
 
+> *镜像地址：https://www.codewithgpu.com/i/datawhalechina/tiny-universe/tiny-universe-tiny-rag*
+
 <div align=center>
     <img src="./content/TinyRAG/images/RAG.png" style="width:90%;">
 </div>

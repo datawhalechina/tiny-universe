@@ -13,4 +13,5 @@ html2text
 tiktoken
 beautifulsoup4
 sentencepiece
+modelscope
 

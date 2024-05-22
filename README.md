@@ -12,6 +12,7 @@
 2. 如何评估你的大模型——Tiny Eval
 3. 纯手工搭建 RAG 框架——Tiny RAG
 4. 手搓一个最小的 Agent 系统——Tiny Agent
+5. 深入理解大模型基础——Tiny Transformer
 
 ## 项目意义
 
@@ -42,6 +43,8 @@
 - 欢迎大家参与贡献哦，一起打造一个更好的LLM生态！
 
 ## *News*
+
+- ***2024.5.20：增加选修内容——Tiny Transformer，纯手工搭建 Transformer 模型***
 
 - ***2024.5.1：发布 Tiny-Universe V1 版本，劳动节帕鲁献礼！***
 
@@ -96,6 +99,12 @@
 <div align=center>
     <img src="./content/TinyEval/Eval/docs/compass.png" style="width:70%;">
 </div>
+
+### [*TinyTransformer*](./content/TinyTransformer)
+
+&emsp;&emsp;目前，所有 LLM 几乎都以 Transformer 提出的 Attention 机制作为基础，要深入理解 LLM 的原理和结构，深入、全面地理解 Transformer 是必经之路。  
+
+&emsp;&emsp;***基于 Transformer 经典论文《Attention is All You Need》，我们在 pytorch 层手工搭建了一个完整、可复现、可运行的 Transformer 模型，帮助学习者更深入地理解 Transformer 原理结构，打牢 LLM 基础。***
 
 ## 致谢
 

@@ -60,7 +60,7 @@ class InternLM2Chat(BaseModel):
 - 首先要在 `tools` 中添加工具的描述信息
 - 然后在 `tools` 中添加工具的具体实现
 
-> *使用Google搜索功能的话需要去`serper`官网申请一下`token`: https://serper.dev/dashboard*， *然后在tools.py文件中填写你的key，这个key每人可以免费申请一个，且有2500次的免费调用额度，足够做实验用啦~*
+> 使用Google搜索功能的话需要去`serper`官网申请一下`token`: https://serper.dev/dashboard， 然后在tools.py文件中填写你的key，这个key每人可以免费申请一个，且有2500次的免费调用额度，足够做实验用啦~
 
 ```python
 class Tools:

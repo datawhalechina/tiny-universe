@@ -128,7 +128,7 @@
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=datawhalechina/tiny-universe&type=Date)](https://star-history.com/#datawhalechina/tiny-universe&Date)
+![image](https://github.com/datawhalechina/tiny-universe/assets/99795077/4d37388f-bef6-443d-9f86-3f34e86c658f)
 
 ## 关注我们
 

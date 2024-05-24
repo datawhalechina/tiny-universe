@@ -50,7 +50,7 @@
 
 ## 项目结构
 
-### [*Qwen-Blog*](./content/Qwen-blog/)
+### [*Qwen-Blog*](./content/Qwen-blog/) ([对应讲解视频](https://meeting.tencent.com/v2/cloud-record/share?id=0be29bb2-0648-4aeb-9baa-c9dc91dfc7a6&from=3&is-single=false&record_type=2))
 
 &emsp;&emsp;初学者在学习LLM时，往往对庞大的代码与各种封装的功能"谈码色变"~  
 

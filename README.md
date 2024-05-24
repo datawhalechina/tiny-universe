@@ -126,6 +126,10 @@
   </a>
 </div>
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=datawhalechina/tiny-universe&type=Date)](https://star-history.com/#datawhalechina/tiny-universe&Date)
+
 ## 关注我们
 
 <div align=center>

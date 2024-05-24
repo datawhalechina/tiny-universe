@@ -126,10 +126,6 @@
   </a>
 </div>
 
-## Star History
-
-![image](https://github.com/datawhalechina/tiny-universe/assets/99795077/4d37388f-bef6-443d-9f86-3f34e86c658f)
-
 ## 关注我们
 
 <div align=center>

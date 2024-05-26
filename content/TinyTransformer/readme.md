@@ -142,7 +142,7 @@ def attention(q, k, v):
 但是，在我们的实际应用中，我们往往只需要计算 Query 和 Key 之间的注意力结果，很少存在额外的真值 Value。
 也就是说，我们其实只需要拟合两个文本序列。
 ​在经典的 Attention 机制中，Q 往往来自于一个序列，K 与 V 来自于另一个序列，都通过参数矩阵计算得到，从而可以拟合这两个序列之间的关系。
-例如在 Transformer 的 Decoder 结构中，Q 来自于 Encoder 的输出，K 与 V 来自于 Decoder 的输入，
+例如在 Transformer 的 Decoder 结构中，Q 来自于 Decoder 的输入，K 与 V 来自于 Encoder 的输出，
 从而拟合了编码信息与历史信息之间的关系，便于综合这两种信息实现未来的预测。
 
 ​但在 Transformer 的 Encoder 结构中，使用的是 Attention 机制的变种 —— self-attention （自注意力）机制。

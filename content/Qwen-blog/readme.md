@@ -1,4 +1,5 @@
 # Qwen整体介绍
+Qwen模型架构讲解直播：[直播链接](https://meeting.tencent.com/v2/cloud-record/share?id=0be29bb2-0648-4aeb-9baa-c9dc91dfc7a6&from=3&is-single=false&record_type=2)
 
 Qwen的整体架构与Llama2类似，如下图所示:
 ![框架图](./img/framework.JPEG)  
@@ -8,6 +9,8 @@ Qwen的整体架构与Llama2类似，如下图所示:
 - 数值经过`embedding`得到一一对应的向量。
 - `attention_mask`是用来看见左边、右边，双向等等来设定。
 - 各类下游任务，`Casual`,`seqcls`等，基本都是基础模型`model`后面接对应的`Linear`层，还有损失函数不一样。
+
+
 
 # 1 Qwen2Config
 Qwen2Config中包含一些自定义的超参数，例如`vocab_size`,`hidden_size`,`num_hidden_layers`, `num_attention_heads`等。类似于`dict`可以调用里面的超参数:`config.pad_token_id`。 

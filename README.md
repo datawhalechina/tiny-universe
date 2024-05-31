@@ -63,7 +63,7 @@
 </div>
 
 
-### [*TinyRAG*](./content/TinyRAG/)
+### [*TinyRAG*](./content/TinyRAG/)([对应讲解视频](https://meeting.tencent.com/v2/cloud-record/share?id=4306b90c-d772-4faa-baeb-1f4e0bf4569f&from=3&is-single=false&record_type=2))
 
 &emsp;&emsp;LLM会产生误导性的 “幻觉”，依赖的信息可能过时，处理特定知识时效率不高，缺乏专业领域的深度洞察，同时在推理能力上也有所欠缺。
 
@@ -79,7 +79,7 @@
     <img src="./content/TinyRAG/images/RAG.png" style="width:90%;">
 </div>
 
-### [*TinyAgent*](./content/TinyAgent/)
+### [*TinyAgent*](./content/TinyAgent/)(暂无录播，Datawhale视频号搜索“动手搭建一个最小Agent系统”)
 
 &emsp;&emsp;大模型具有出人意料的强大能力，却也有其固定缺陷，在逻辑推理、现实事件、高度垂直领域等方面仍然存在薄弱之处。因此，通过针对性的工具来为大模型赋能，给大模型一个抓手，让大模型和现实世界发生的事情对齐颗粒度，从而打造一个更智能、更专业、更全面的大模型应用，是大模型未来的重要发展方向。Agent 就基于这样的理念，将 LLM 打造为能自主理解、规划决策、执行复杂任务的智能体，给予其丰富的专业工具，从而真正让大模型走入现实生活，为未来赋能。
 
@@ -90,7 +90,7 @@
 </div>
 
 
-### [*TinyEval*](./content/TinyEval)
+### [*TinyEval*](./content/TinyEval)([对应讲解视频](https://meeting.tencent.com/v2/cloud-record/share?id=8b9cf6ca-add6-477b-affe-5b62e2d8f27e&from=3))
 
 &emsp;&emsp;随着LLM的推广，越来越多的小伙伴已经熟悉了模型sft微调流程，但是对于微调的结果，尤其是如何判断各大模型在当前数据集上的表现，仍然是一个待解决的问题。并且，对于选择式、判别式、生成式等不同的生成任务，如何才能够客观地评价模型生成质量，仍是一个需要明确的问题。  
 

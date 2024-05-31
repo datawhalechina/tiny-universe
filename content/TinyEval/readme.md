@@ -1,4 +1,6 @@
 # TinyEval
+手搓LLM评测系统直播：[直播链接](https://meeting.tencent.com/v2/cloud-record/share?id=8b9cf6ca-add6-477b-affe-5b62e2d8f27e&from=3)
+
 下面我会带领大家一步一步实现一个简单的LLM评测框架，该框架是一个双阶段的评测体系，我们称之为`TinyEval`，包含了`LLM`通用评测的核心功能，支持生成式、判别式、选则式评测问题，框架主要包含`inference`与`eval`部分，目的是为了帮助大家更好的力即LLM评测的原理与实现。
 
 ## 1.项目的Motivation是什么?

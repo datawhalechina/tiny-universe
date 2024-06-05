@@ -10,6 +10,8 @@ REACT_PROMPT = """Answer the following questions as best you can. You have acces
 
 {tool_descs}
 
+Do not use other tools!
+
 Use the following format:
 
 Question: the input question you must answer
@@ -60,16 +62,21 @@ class Agent:
         plugin_args = json5.loads(plugin_args)
         if plugin_name == 'google_search':
             return '\nObservation:' + self.tool.google_search(**plugin_args)
+        else:
+            return '\nWrong input!'
 
-    def text_completion(self, text, history=[]):
-        text = "\nQuestion:" + text
-        response, his = self.model.chat(text, history, self.system_prompt)
-        print(response)
-        plugin_name, plugin_args, response = self.parse_latest_plugin_call(response)
-        if plugin_name:
-            response += self.call_plugin(plugin_name, plugin_args)
-        response, his = self.model.chat(response, history, self.system_prompt)
-        return response, his
+    def text_completion(self, text, history=[], max_iter=5):
+        response = "\nQuestion:" + text
+        for i in range(max_iter):
+            response, history = self.model.chat(text, history, self.system_prompt)
+            if response.rfind('\nFinal Answer:') > 0: # end iteration
+                break
+            plugin_name, plugin_args, response = self.parse_latest_plugin_call(response)
+            if plugin_name:
+                response += self.call_plugin(plugin_name, plugin_args)
+            print(response)
+        #response, history = self.model.chat(response, history, self.system_prompt)
+        return response, history
 
 if __name__ == '__main__':
     agent = Agent('/root/share/model_repos/internlm2-chat-7b')

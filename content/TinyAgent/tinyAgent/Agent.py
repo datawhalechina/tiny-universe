@@ -68,7 +68,7 @@ class Agent:
     def text_completion(self, text, history=[], max_iter=5):
         response = "\nQuestion:" + text
         for i in range(max_iter):
-            response, history = self.model.chat(text, history, self.system_prompt)
+            response, history = self.model.chat(response, history, self.system_prompt)
             if response.rfind('\nFinal Answer:') > 0: # end iteration
                 break
             plugin_name, plugin_args, response = self.parse_latest_plugin_call(response)

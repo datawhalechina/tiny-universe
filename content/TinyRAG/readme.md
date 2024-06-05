@@ -1,4 +1,5 @@
 # TinyRAG
+手搓RAG直播：[直播链接](https://meeting.tencent.com/v2/cloud-record/share?id=4306b90c-d772-4faa-baeb-1f4e0bf4569f&from=3&is-single=false&record_type=2)
 
 接下来我会带领大家一步一步的实现一个简单的RAG模型，这个模型是基于RAG的一个简化版本，我们称之为Tiny-RAG。Tiny-RAG是一个基于RAG的简化版本，它只包含了RAG的核心功能，即Retrieval和Generation。Tiny-RAG的目的是为了帮助大家更好的理解RAG模型的原理和实现。
 

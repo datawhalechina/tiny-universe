@@ -16,7 +16,7 @@ def attention(q, k, v, dropout_module = None, is_causal=False, dropout=None, mas
     # 计算 softmax，维度为 (B, nh, T, T)
     att = F.softmax(att, dim=-1)
     # Attention Dropout
-    att = dropout_module(dropout)
+    att = dropout_module(att)
     # V * Score，维度为(B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
     y = att @ v 
     return y

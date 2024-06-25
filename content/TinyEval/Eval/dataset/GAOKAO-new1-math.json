@@ -1,0 +1,107 @@
+{
+    "one-choice-question": [
+      {
+        "question": "已知集合 A = {x | -5 < x^3 < 5}, B = {-3, -1, 0, 2, 3}，则 A ∩ B = (  )",
+        "options": [
+          {"option": "A", "value": "{-1, 0}"},
+          {"option": "B", "value": "{2, 3}"},
+          {"option": "C", "value": "{-3, -1, 0}"},
+          {"option": "D", "value": "{-1, 0, 2}"}
+        ],
+        "answer": "A"
+      },
+      {
+        "question": "若 z / (z - 1) = 1 + i，则 z = (  )",
+        "options": [
+          {"option": "A", "value": "-1 - i"},
+          {"option": "B", "value": "-1 + i"},
+          {"option": "C", "value": "1 - i"},
+          {"option": "D", "value": "1 + i"}
+        ],
+        "answer": "C"
+      },
+      {
+        "question": "已知向量 ā = (0, 1), b̄ = (2, x)，若 b̄ ⊥ (b̄ - 4ā)，则 x = (  )",
+        "options": [
+          {"option": "A", "value": "-2"},
+          {"option": "B", "value": "-1"},
+          {"option": "C", "value": "1"},
+          {"option": "D", "value": "2"}
+        ],
+        "answer": "D"
+      },
+      {
+        "question": "已知 cos(α + β) = m, tanαtan β = 2，则 cos(α - β) = (  )",
+        "options": [
+          {"option": "A", "value": "-3m"},
+          {"option": "B", "value": "-m/3"},
+          {"option": "C", "value": "m/3"},
+          {"option": "D", "value": "3m"}
+        ],
+        "answer": "A"
+      },
+      {
+        "question": "已知圆柱和圆锥底面半径相等，侧面半径相等，且它们的高均为 √3，则圆锥的体积为 (  )",
+        "options": [
+          {"option": "A", "value": "2√3π"},
+          {"option": "B", "value": "3√3π"},
+          {"option": "C", "value": "6√3π"},
+          {"option": "D", "value": "9√3π"}
+        ],
+        "answer": "B"
+      },
+      {
+        "question": "已知函数 f(x) = { -x^2 - 2ax - a, x < 0; e^x + ln(x + 1), x ≥ 0 }，在 R 上单调递增，则 a 取值的范围是 (  )",
+        "options": [
+          {"option": "A", "value": "(-∞, 0]"},
+          {"option": "B", "value": "[-1, 0]"},
+          {"option": "C", "value": "[-1, 1]"},
+          {"option": "D", "value": "[0, +∞]"}
+        ],
+        "answer": "B"
+      },
+      {
+        "question": "当 x ∈ [0, 2π] 时，曲线 y = sin x 与 y = 2 sin (3x - π/6) 的交点个数为 (  )",
+        "options": [
+          {"option": "A", "value": "3"},
+          {"option": "B", "value": "4"},
+          {"option": "C", "value": "6"},
+          {"option": "D", "value": "8"}
+        ],
+        "answer": "C"
+      },
+      {
+        "question": "已知函数为 f(x) 的定义域为 R，f(x) > f(x - 1) + f(x - 2)，且当 x < 3 时 f(x) = x，则下列结论中一定正确的是 (  )",
+        "options": [
+          {"option": "A", "value": "f(10) > 100"},
+          {"option": "B", "value": "f(20) > 1000"},
+          {"option": "C", "value": "f(10) < 1000"},
+          {"option": "D", "value": "f(20) < 10000"}
+        ],
+        "answer": "B"
+      }
+    ],
+    "multiple-choice-question": [
+    {
+      "question": "为了理解动出口后的亩收入（单位：万元）情况，从该种植区抽取样本，得到推动出口后亩收入的样本均值 x̄ = 2.1，样本方差 s^2 = 0.01，已知该种植区以往的亩收入 X 服从正态分布 N(1.8, 0.1^2)，假设推动出口后的亩收入 Y 服从正态分布 N(x̄, s^2)，则 (  ) 若随机变量 Z 服从正态分布 N(u, σ^2)，P(Z < u + σ) ≈ 0.8413",
+      "options": [
+        {"option": "A", "value": "P(X > 2) > 0.2"},
+        {"option": "B", "value": "P(X > 2) < 0.5"},
+        {"option": "C", "value": "P(Y > 2) > 0.5"},
+        {"option": "D", "value": "P(Y > 2) < 0.8"}
+      ],
+      "answer": "BC"
+    },
+    {
+      "question": "设函数 f(x) = (x - 1)^2(x - 4)，则 (  )",
+      "options": [
+        {"option": "A", "value": "x = 3 是 f(x) 的极小值点"},
+        {"option": "B", "value": "当 0 < x < 1 时，f(x) < f(x^2)"},
+        {"option": "C", "value": "当 1 < x < 2 时，-4 < f(2x - 1) < 0"},
+        {"option": "D", "value": "当 -1 < x < 0 时，f(2 - x) > f(x)"}
+      ],
+      "answer": "ACD"
+    }
+  ]
+  }
+  

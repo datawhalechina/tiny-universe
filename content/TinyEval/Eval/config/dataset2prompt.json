@@ -1,0 +1,7 @@
+{
+    "multifieldqa_zh": "阅读以下文字并用中文简短回答：\n\n{context}\n\n现在请基于上面的文章回答下面的问题，只告诉我答案，不要输出任何其他字词。\n\n问题：{input}\n回答：",
+    "multi_news": "You are given several news passages. Write a one-page summary of all news. \n\nNews:\n{context}\n\nNow, write a one-page summary of all the news.\n\nSummary:",
+    "trec": "Please determine the type of the question below. Here are some examples of questions.\n\n{context}\n{input}",
+    "custom_zh": "问题是:{input} \n回答是: ",
+    "custom_en": "Question:{input} \nAnswer: "
+}

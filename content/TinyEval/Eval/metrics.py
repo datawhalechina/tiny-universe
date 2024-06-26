@@ -98,15 +98,43 @@ def qa_f1_zh_score(prediction, ground_truth, **kwargs):
     return f1_score(prediction_tokens, ground_truth_tokens)
 
 def GAOKAO_math(prediction, ground_truth, **kwargs):
-    pattern = r"[A-D]"
     score = 0
-    # 找到所有大写字母的匹配项
-    matches = re.findall(pattern, prediction)
-    # 选择最后一个匹配项作为答案
-    if matches:
-        last_match = matches[-1]
-        if last_match == ground_truth:
-            score = 1  # 如果最后一个匹配项等于真实答案，则得分为1
+    # 判断是单选还是多选
+    if len(ground_truth) > 1:
+        # 多选
+        pattern = r"[A-D]"
+        matches = re.findall(pattern, prediction)
+        predicted_answer = ''
+        
+        if matches:
+            # 从后往前匹配大写字母，且满足之间长度不超过10个字符的条件
+            reversed_prediction = prediction[::-1]
+            if len(matches) > 1:
+                # 从后往前遍历匹配项
+                for i, match in enumerate(matches):
+                    if i == 0:
+                        predicted_answer += match
+                    else:
+                        # 计算当前匹配项与上一个匹配项之间的距离
+                        distance = reversed_prediction.find(matches[i-1]) - reversed_prediction.find(match) - 1
+                        # 如果距离大于5，则停止添加更多的选项
+                        if distance > 5:
+                            break
+                        predicted_answer += match
+                # 将预测答案排序并去重
+                predicted_answer = ''.join(sorted(set(predicted_answer)))
+            # 计算得分
+            if predicted_answer == ground_truth:
+                score = 1
+            elif all(option in ground_truth for option in predicted_answer) and len(predicted_answer) < len(ground_truth):
+                score = 0.5
+    else:
+        # 单选
+        pattern = r"[A-D]"
+        matches = re.findall(pattern, prediction)
+        if matches and matches[-1] == ground_truth:
+            score = 1
+    
     return score
 
     

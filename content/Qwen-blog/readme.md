@@ -444,6 +444,8 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
 <div align=center>
     <img src='./img/Mask3.png'>
 </div>
+- 对于推理的过程，问询不一样长没关系，因为所有的权重都是dim-dim，得到的attention_score是一个seq,seq的，权重跟seq的大小没关系。其都是后面的dim维度的参数。
+- 推理过程的attention_mask可有可无，是一个一个吐，循环cat到下一个，每一次都取最后一个，代表着预测的是下一个token。
 
 ## 1.4 Qwen2 MLP
 

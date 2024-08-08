@@ -296,8 +296,8 @@ def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
 ```python
 #(bs, head, seq_len, head_dim)
 query = query.transpose(1, 2)
-key = repeat_kv(key, 4).transpose(1, 2)
-value = repeat_kv(value, 4).transpose(1, 2)
+key = repeat_kv(key.transpose(1, 2), 4)
+value = repeat_kv(value.transpose(1, 2), 4)
 scores = torch.matmul(query, key.transpose(2, 3)) / math.sqrt(head_dim)
 scores = torch.nn.functional.softmax(scores, dim=-1)
 

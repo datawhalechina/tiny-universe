@@ -112,7 +112,7 @@
 #### 核心贡献者
 
 - [肖鸿儒-项目负责人](https://github.com/Hongru0306)(Datawhale成员-同济大学)
-- [宋志学-项目负责人](https://github.com/KMnO4-zx)(Datawhale成员-河南理工大学)
+- [宋志学-项目负责人](https://github.com/KMnO4-zx)(Datawhale成员-中国矿业大学(北京))
 - [邹雨衡-项目负责人](https://github.com/logan-zou)(Datawhale成员-对外经济贸易大学)
 
 #### 其他

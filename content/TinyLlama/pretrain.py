@@ -6,8 +6,8 @@ from datetime import datetime
 from functools import partial
 
 import torch
-from LLama.llama_model import Transformer, ModelArgs
-from LLama.llama_model import Task
+from LLama_content.llama_model import Transformer, ModelArgs
+from LLama_content.llama_model import Task
 
 # -----------------------------------------------------------------------------
 # I/O

@@ -6,7 +6,7 @@ Llama3 相较于llama2在model层面上主要区别是全模型使用GQA，在�
 ```bash
 pretrain.py
 ```
-- 其中，为了更好的了解Llama model细节，创建了同目录下的`model_learn.ipynb`文件拱大家参考！！
+- 其中，为了更好的了解Llama model细节，创建了同目录下的`Llama_content/model_learn.ipynb`文件拱大家参考！！
 
 # 数据准备
 

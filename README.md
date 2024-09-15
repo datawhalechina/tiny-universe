@@ -9,10 +9,11 @@
 
 &emsp;&emsp;本项目的主要内容包括：
 1. 深入剖析大模型原理——Qwen Blog
-2. 如何评估你的大模型——Tiny Eval
-3. 纯手工搭建 RAG 框架——Tiny RAG
-4. 手搓一个最小的 Agent 系统——Tiny Agent
-5. 深入理解大模型基础——Tiny Transformer
+2. 逐步预训练一个手搓大模型——Tiny Llama3
+3. 如何评估你的大模型——Tiny Eval
+4. 纯手工搭建 RAG 框架——Tiny RAG
+5. 手搓一个最小的 Agent 系统——Tiny Agent
+6. 深入理解大模型基础——Tiny Transformer
 
 ## 项目意义
 

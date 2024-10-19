@@ -2,7 +2,7 @@
 Qwen模型架构讲解直播：[直播链接](https://meeting.tencent.com/v2/cloud-record/share?id=0be29bb2-0648-4aeb-9baa-c9dc91dfc7a6&from=3&is-single=false&record_type=2)
 
 Qwen的整体架构与Llama2类似，如下图所示:
-![框架图](./img/framework.JPEG)  
+![框架图](./img/framework.JPG)  
 
 其中:   
 - `tokenizer`将文本转为词表里面的数值。

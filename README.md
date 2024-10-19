@@ -63,7 +63,7 @@
 &emsp;&emsp;***项目内除了Model内容外，也添加了嵌入模型内部的GQA，ROPE与Attention Mask等机制的细致讲解，促进大家对LLM的全面理解！***
 
 <div align=center>
-    <img src="./content/Qwen-blog/img/framework.JPEG" style="width:90%;">
+    <img src="./content/Qwen-blog/img/framework.JPG" style="width:90%;">
 </div>
 
 

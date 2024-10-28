@@ -158,7 +158,7 @@ def attention(q, k, v):
 self.attn(x, x, x)
 ```
 
-​上述代码是 Encoder 层的部分实现，self.attn 即是注意力层，传入的三个参数都是 $x$，分别是 $Q$、$K$、$V$ 的计算输入，从而 $Q$、$K$、$$ 均来源于同一个输入，则实现了自注意力的拟合。
+​上述代码是 Encoder 层的部分实现，self.attn 即是注意力层，传入的三个参数都是 $x$，分别是 $Q$、$K$、$V$ 的计算输入，从而 $Q$、$K$、$V$ 均来源于同一个输入，则实现了自注意力的拟合。
 
 ### 1.5 Casual Self Attention
 

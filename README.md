@@ -44,6 +44,9 @@
 - 欢迎大家参与贡献哦，一起打造一个更好的LLM生态！
 
 ## *News*
+
+- ***2024.10.28：TinyLLM，从训练 Tokenizer 到模型生成，1G显存即可完成！***
+
 - ***2024.8.23：Tiny-Llama3，从model到pretrain，震撼发布！！***
 
 - ***2024.6.26：增加选修内容——高考数学评测，使TinyEval接入高考题目评测！！***
@@ -104,11 +107,11 @@
     <img src="./content/TinyEval/Eval/docs/compass.png" style="width:70%;">
 </div>
 
-###[*TinyLLM*](./content/TinyLLM)
+### [*TinyLLM*](./content/TinyLLM)
 
-此项目在于实现一个简单的大语言模型，从训练tokenizer开始，到训练模型，再到使用模型生成文本。仅使用Numpy和Pytorch即可实现一个简单的大语言模型训练，显存使用2G左右。以下为项目效果展示。
+&emsp;&emsp;此项目在于实现一个简单的大语言模型，从训练tokenizer开始，到训练模型，再到使用模型生成文本。仅使用Numpy和Pytorch即可实现一个简单的大语言模型训练，显存使用2G左右。以下为项目效果展示。
 
-训练模型所需要的资源也是很少的，仅需要一个显卡即可，显存使用2G左右。训练模型的时间也不长，仅需要几个小时即可完成。
+&emsp;&emsp;训练模型所需要的资源也是很少的，仅需要一个显卡即可，显存使用2G左右。训练模型的时间也不长，仅需要几个小时即可完成。
 
 <div align="center">
     <img src="images/model_show.png" alt="RAG" width="85%">

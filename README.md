@@ -104,6 +104,16 @@
     <img src="./content/TinyEval/Eval/docs/compass.png" style="width:70%;">
 </div>
 
+###[*TinyLLM*](./content/TinyLLM)
+
+此项目在于实现一个简单的大语言模型，从训练tokenizer开始，到训练模型，再到使用模型生成文本。仅使用Numpy和Pytorch即可实现一个简单的大语言模型训练，显存使用2G左右。以下为项目效果展示。
+
+训练模型所需要的资源也是很少的，仅需要一个显卡即可，显存使用2G左右。训练模型的时间也不长，仅需要几个小时即可完成。
+
+<div align="center">
+    <img src="images/model_show.png" alt="RAG" width="85%">
+</div>
+
 ### [*TinyTransformer*](./content/TinyTransformer)
 
 &emsp;&emsp;目前，所有 LLM 几乎都以 Transformer 提出的 Attention 机制作为基础，要深入理解 LLM 的原理和结构，深入、全面地理解 Transformer 是必经之路。  

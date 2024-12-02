@@ -93,8 +93,42 @@ class SimpleUnet(nn.Module):
         return self.output(x)
 
 
+def print_shapes(model, x, time_step):
+    print("Input shape:", x.shape)
+    
+    # 时间步嵌入
+    t = model.time_embed(time_step)
+    print("Time embedding shape:", t.shape)
+    
+    # 初始卷积
+    x = model.input(x)
+    print("After input conv shape:", x.shape)
+    
+    #下采样过程
+    residual_stack = []
+    print("\nDownsampling process:")
+    for i, down in enumerate(model.downs):
+        x = down(x, t)
+        residual_stack.append(x)
+        print(f"Down block {i+1} output shape:", x.shape)
+    
+    # 上采样过程
+    print("\nUpsampling process:")
+    for i, up in enumerate(model.ups):
+        residual_x = residual_stack.pop()
+        x = torch.cat((x, residual_x), dim=1)
+        print(f"Concatenated input shape before up block {i+1}:", x.shape)
+        x = up(x, t)
+        print(f"Up block {i+1} output shape:", x.shape)
+    
+    # 最终输出
+    output = model.output(x)
+    print("\nFinal output shape:", output.shape)
+    return output
+
+
 if __name__ == "__main__":
     model = SimpleUnet()
-    x = torch.randn(1, 3, 64, 64)
+    x = torch.randn(1, 3, 32, 32)
     time_step = torch.tensor([10])
-    print(model(x, time_step).shape)
+    print_shapes(model, x, time_step)

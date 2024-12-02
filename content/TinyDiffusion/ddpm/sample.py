@@ -27,21 +27,14 @@ def sample(model, scheduler, num_samples, size, device="cpu"):
             # 构造时间步batch
             t_batch = torch.tensor([t] * num_samples).to(device)
 
-            # beta = scheduler.get(scheduler.betas, t_batch, x_t.shape)
-            # sqrt_recip_alpha = scheduler.get(scheduler.sqrt_recip_alphas, t_batch, x_t.shape)
-            # sqrt_one_minus_alpha_bar = scheduler.get(scheduler.sqrt_one_minus_alpha_bar, t_batch, x_t.shape)
-            # posterior_variance = scheduler.get(scheduler.posterior_var, t_batch, x_t.shape)
-            
             # 获取采样需要的系数
             sqrt_recip_alpha_bar = scheduler.get(scheduler.sqrt_recip_alphas_bar, t_batch, x_t.shape)
             sqrt_recipm1_alpha_bar = scheduler.get(scheduler.sqrt_recipm1_alphas_bar, t_batch, x_t.shape)
             posterior_mean_coef1 = scheduler.get(scheduler.posterior_mean_coef1, t_batch, x_t.shape)
             posterior_mean_coef2 = scheduler.get(scheduler.posterior_mean_coef2, t_batch, x_t.shape)
 
-            # 预测噪声 ε_θ(xt,t)
+            # 预测噪声 ε_θ(x_t,t)
             predicted_noise = model(x_t, t_batch)
-
-            # model_mean = sqrt_recip_alpha * (x_t - (beta / sqrt_one_minus_alpha_bar) * predicted_noise)
 
             # 计算x_0的预测值: x_0 = 1/sqrt(α_bar_t) * x_t - sqrt(1/α_bar_t-1) * ε_θ(x_t,t)
             _x_0 = sqrt_recip_alpha_bar * x_t - sqrt_recipm1_alpha_bar * predicted_noise
@@ -53,7 +46,6 @@ def sample(model, scheduler, num_samples, size, device="cpu"):
             if t > 0:
                 # t>0时从后验分布采样: x_t-1 = μ_θ(x_t,t) + σ_t * z, z~N(0,I)
                 noise = torch.randn_like(x_t).to(device)
-                # x_t = model_mean + torch.sqrt(posterior_variance) * noise
                 x_t = model_mean + torch.exp(0.5 * model_log_var) * noise
             else:
                 # t=0时直接使用均值作为生成结果

@@ -16,40 +16,50 @@ pip install -r requirements.txt
 
 ![DDPM马尔可夫链](fig/fig1.png)
 
-#### 符号定义
-$p_\theta$: 参数为$\theta$的网络模型对去噪过程的估计概率分布
-$q$: 真实的图像分布
-$x_0$: 原始图片
-$x_t$: 加噪$t$步的图片
-
 DDPM 是一个基于马尔可夫链的生成模型。如上图所示，它通过一个前向过程(Forward Process)逐步向数据中添加高斯噪声，最终得到纯噪声，然后通过一个反向过程(Reverse Process)从噪声中逐步恢复出数据。
+
+#### 符号定义
+
+$p_\theta$: 参数为$\theta$的网络模型对去噪过程的估计概率分布
+
+$q$: 真实的图像分布
+
+$x_0$: 原始图片
+
+$x_t$: 加噪$t$步的图片
 
 #### 前向加噪过程
 
-在前向过程中，我们需要向$x_{t-1}$中添加一个小的高斯噪声，得到下一时刻的$x_t$的值：
-$x_t = \sqrt{1-\beta_t}x_{t-1} + \sqrt{\beta_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$
-其中，$\beta_t$为预设的方差系数，控制加噪过程，这是人为确定的。
+在前向过程中，我们需要向 $x_{t-1}$ 中添加一个小的高斯噪声，得到下一时刻的 $x_t$ 的值：
+$$x_t = \sqrt{1-\beta_t}x_{t-1} + \sqrt{\beta_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$$
+其中，$\beta_t$ 为预设的方差系数，控制加噪过程，这是人为确定的。
+
 对应于原文公式（2）（文章中使用分布的形式来表示）:
-$q(x_t | x_{t-1}) := \mathcal{N}(x_t; \sqrt{1-\beta}x_{t-1}, \beta_t I)$
+$$q(x_t | x_{t-1}) := \mathcal{N}(x_t; \sqrt{1-\beta}x_{t-1}, \beta_t I)$$
 
-令$\alpha_t = 1-\beta_t$，同时继续递推，利用高斯分布的叠加性质，可以得到从$x_0$到$x_t$的公式：
-$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$
-其中，$\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$。
+<br>
+
+令 $\alpha_t = 1-\beta_t$ ，同时继续递推，利用高斯分布的叠加性质，可以得到从 $x_0$ 到 $x_t$ 的公式：
+$$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$$
+其中， $\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$ 。
+
 对应于原文公式（4）:
-$q(x_t|x_0) := \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t)I)$
+$$q(x_t|x_0) := \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t)I)$$
 
-当$t$足够大（$t \rightarrow T$）时，$x_T$近似于标准正态分布$x_T \rightarrow \epsilon$。这意味着经过足够多步的加噪后，图像已经完全变为随机噪声。这也是为什么在采样时可以直接从标准正态分布采样作为起点。
+<br>
+
+当 $t$ 足够大（$t \rightarrow T$）时，$x_T$ 近似于标准正态分布 $x_T \rightarrow \epsilon$ 。这意味着经过足够多步的加噪后，图像已经完全变为随机噪声。这也是为什么在采样时可以直接从标准正态分布采样作为起点。
 
 #### 逆向去噪过程
 
-在去噪过程中，我们需要根据当前时刻的$x_t$，通过模型来预测前一时刻的$x_{t-1}$的值。
-实际操作中，我们是通过让模型$p_\theta$预测前向过程中从$x_{t-1}$到$x_t$加入的噪声来实现的：
-$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)) + \sigma_t z, z \sim \mathcal{N}(0,I)$
-其中，$\sigma_t^2 = \frac{(1-\alpha_t)(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}$，$\epsilon_\theta(x_t,t)$是模型根据$x_t$和$t$预测的正向过程中加入的噪声。
+在去噪过程中，我们需要根据当前时刻的 $x_t$，通过模型来预测前一时刻的 $x_{t-1}$ 的值。
+实际操作中，我们是通过让模型 $p_\theta$ 预测前向过程中从 $x_{t-1}$ 到 $x_t$ 加入的噪声来实现的：
+$$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)) + \sigma_t z, z \sim \mathcal{N}(0,I)$$
+其中， $\sigma_t^2 = \frac{(1-\alpha_t)(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}$ ， $\epsilon_\theta(x_t,t)$ 是模型根据 $x_t$ 和 $t$ 预测的正向过程中加入的噪声。
 
-这也就是原文的公式（6）～（7）（将$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon_\theta(x_t,t)$代入，同时利用$\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$）：
-$q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I)$
-其中，$\tilde{\mu}_t(x_t, x_0) := \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha}_{t-1})}{1 - \bar{\alpha}_t} x_t$, $\tilde{\beta}_t := \frac{1 - \bar{\alpha}_{t-1}}{1 - \bar{\alpha}_t} \beta_t$
+这也就是原文的公式（6）～（7）（将 $x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon_\theta(x_t,t)$ 代入，同时利用 $\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$ ）：
+$$q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I)$$
+其中， $\tilde{\mu}_t(x_t, x_0) := \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha}_{t-1})}{1 - \bar{\alpha}_t} x_t$ ， $\tilde{\beta}_t := \frac{1 - \bar{\alpha}_{t-1}}{1 - \bar{\alpha}_t} \beta_t$ 。
 
 ## 上手实现
 
@@ -57,7 +67,7 @@ $q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde
 
 我们使用 CIFAR-10 数据集进行训练。首先下载数据到 `datasets/` 文件夹，并保持目录结构为 `datasets/cifar-10-batches-py`。
 
-接着，我们定义一个数据转换器来处理数据，对于训练集，我们进行随机水平翻转，并缩放到$32 \times 32$大小。为了方便加入高斯噪声和去噪，我们需要将数据缩放到[-1,1]范围。对于测试集，我们直接缩放到$32 \times 32$大小，并将其缩放到[-1,1]范围。
+接着，我们定义一个数据转换器来处理数据，对于训练集，我们进行随机水平翻转，并缩放到 $32 \times 32$ 大小。为了方便加入高斯噪声和去噪，我们需要将数据缩放到 $[-1,1]$ 范围。对于测试集，我们直接缩放到 $32 \times 32$ 大小，并将其缩放到 $[-1,1]$ 范围。
 ```python
 train_data_transform = transforms.Compose([
     transforms.Resize((img_size, img_size)),
@@ -73,7 +83,7 @@ test_data_transform = transforms.Compose([
 ```
 接着我们使用 `torchvision.datasets.CIFAR10` 来加载数据，并创建 `DataLoader` 来处理数据，详见 `ddpm/dataloader.py`。
 
-完成以上步骤后，我们可以写一个函数来可视化数据。将转换后的数据，从[-1,1]范围转换为[0,255]范围，修改通道顺序，并转换为PIL图像格式，如果图像是批次数据,则取第一个图像。
+完成以上步骤后，我们可以写一个函数来可视化数据。将转换后的数据，从 $[-1,1]$ 范围转换为 $[0,255]$ 范围，修改通道顺序，并转换为 PIL 图像格式，如果图像是批次数据,则取第一个图像。
 ```python
 def show_tensor_image(image):
     reverse_transforms = transforms.Compose([
@@ -94,7 +104,10 @@ def show_tensor_image(image):
 
 #### 2. 模型定义
 
-首先，我们定义一个时间嵌入层，将时间步 t 映射为高维向量，并在每个残差块中注入时间信息。参考 Transformer 中的位置编码方法，使用正余弦函数将时间步映射到高维空间。公式为：$PE(t, 2i) = \sin(t / 10000^{2i/d})$，$PE(t, 2i+1) = \cos(t / 10000^{2i/d})$，其中，$d$为嵌入维度，$i$为维度索引。
+首先，我们定义一个时间嵌入层，将时间步 $t$ 映射为高维向量，并在每个残差块中注入时间信息。参考 Transformer 中的位置编码方法，使用正余弦函数将时间步映射到高维空间。公式为：
+$$PE(t, 2i) = \sin(t / 10000^{2i/d})$$
+$$PE(t, 2i+1) = \cos(t / 10000^{2i/d})$$
+其中， $d$ 为嵌入维度， $i$ 为维度索引。
 ```python
 class SinusoidalPositionEmbeddings(nn.Module):
     def __init__(self, dim):
@@ -214,7 +227,7 @@ Final output shape: torch.Size([1, 3, 32, 32])
 
 #### 3. 训练
 
-首先我们需要定义一个噪声调度器，用于控制加噪过程，生成不同时间步的噪声图像。根据上面给出的公式，我们可以用代码对其进行实现。在前向过程中，我们需要定义变量 $\beta_t$，$\alpha_t$，$\bar{\alpha}_t$，$\sqrt{\bar{\alpha}_t}$，$\sqrt{1-\bar{\alpha}_t}$。这里我们使用 `register_buffer` 来定义变量，这样这些变量就会自动与模型参数一起保存和加载。
+首先我们需要定义一个噪声调度器，用于控制加噪过程，生成不同时间步的噪声图像。根据上面给出的公式，我们可以用代码对其进行实现。在前向过程中，我们需要定义变量 $\beta_t$ ， $\alpha_t$ ， $\bar{\alpha}_t$ ， $\sqrt{\bar{\alpha}_t}$ ， $\sqrt{1-\bar{\alpha}_t}$ 。这里我们使用 `register_buffer` 来定义变量，这样这些变量就会自动与模型参数一起保存和加载。
 ```python
 class NoiseScheduler(nn.Module):
     def __init__(self, beta_start=0.0001, beta_end=0.02, num_steps=1000, device="cpu"):
@@ -245,7 +258,7 @@ def get(self, var, t, x_shape):
     return out.view([t.shape[0]] + [1] * (len(x_shape) - 1))
 ```
 
-然后我们便可以实现加噪过程，根据公式：$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$，其中，$\sqrt{\bar{\alpha}_t}$ 和 $\sqrt{1-\bar{\alpha}_t}$ 需要通过 `get` 方法获取。
+然后我们便可以实现加噪过程，根据公式： $x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$ ，其中， $\sqrt{\bar{\alpha}_t}$ 和 $\sqrt{1-\bar{\alpha}_t}$ 需要通过 `get` 方法获取。
 ```python
 def add_noise(self, x, t):
     # 获取时间步t对应的sqrt(α_bar_t)
@@ -262,7 +275,7 @@ def add_noise(self, x, t):
 ![加噪过程](fig/fig2.png)
 
 最后，我们可以实现完整的训练流程了。其步骤为：
-1. 随机采样时间步 t
+1. 随机采样时间步 `t`
 2. 对图像添加噪声,获得带噪声的图像和噪声
 3. 使用模型预测噪声
 4. 计算预测噪声和真实噪声之间的MSE损失
@@ -272,8 +285,8 @@ def add_noise(self, x, t):
 
 #### 4. 采样
 
-采样过程的思路为，从标准正态分布中采样初始噪声，然后逐步去噪，从t=T到t=0，最后将最终结果裁剪到[-1,1]范围。
-在去噪过程中，我们需要获取采样需要的系数，包括 $\sqrt{\frac{1}{\bar{\alpha}_t}}$，$\sqrt{\frac{1}{\bar{\alpha}_t}-1}$，$\mu_\theta(x_t,t)$，$\log(\sigma_t^2)$。
+采样过程的思路为，从标准正态分布中采样初始噪声，然后逐步去噪，从 $t=T$ 到 $t=0$，最后将最终结果裁剪到 $[-1,1]$ 范围。
+在去噪过程中，我们需要获取采样需要的系数，包括 $\sqrt{\frac{1}{\bar{\alpha}_t}}$ ， $\sqrt{\frac{1}{\bar{\alpha}_t}-1}$ ， $\mu_\theta(x_t,t)$ ， $\log(\sigma_t^2)$ 。
 我们在 `NoiseScheduler` 类中定义这些系数：
 ```python
 # α_bar_(t-1)
@@ -295,13 +308,13 @@ self.register_buffer('posterior_mean_coef2', (1.0 - self.alpha_bar_prev) * torch
 
 采样过程的具体流程为（依照原文公式）：
 1. 从标准正态分布采样初始噪声 $x_T \sim \mathcal{N}(0,I)$
-2. 逐步去噪,从t=T到t=0
-3. 根据当前时间步 t 和当前的样本图片 x_t，通过模型计算预测噪声 ε_θ(x_t,t)
-4. 计算$x_0$的预测值: $x_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \sqrt{\frac{1}{\bar{\alpha}_t}-1}\epsilon_\theta(x_t,t)$
-5. 计算后验分布均值: $\mu_\theta(x_t,t) = \frac{\sqrt{\bar{\alpha}_{t-1}}\beta_t}{1-\bar{\alpha}_t}x_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}x_t$
-6. 计算后验分布方差的对数值: $\log(\sigma_t^2) = \log(\tilde{\beta}_t) = \log(\frac{\beta_t(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t})$
-7. 如果当前时间步 t>0，则从后验分布中采样: $x_{t-1} = \mu_\theta(x_t,t) + \sigma_t\epsilon, \epsilon \sim \mathcal{N}(0,I)$
-8. 如果当前时间步 t=0，则直接使用均值作为生成结果: $x_0 = \mu_\theta(x_t,t)$
+2. 逐步去噪，从 $t=T$ 到 $t=0$
+3. 根据当前时间步 $t$ 和当前的样本图片 $x_t$，通过模型计算预测噪声 $\epsilon_\theta(x_t,t)$
+4. 计算 $x_0$ 的预测值:  $x_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \sqrt{\frac{1}{\bar{\alpha}_t}-1}\epsilon_\theta(x_t,t)$
+5. 计算后验分布均值:  $\mu_\theta(x_t,t) = \frac{\sqrt{\bar{\alpha}_{t-1}}\beta_t}{1-\bar{\alpha}_t}x_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}x_t$
+6. 计算后验分布方差的对数值:  $\log(\sigma_t^2) = \log(\tilde{\beta}_t) = \log(\frac{\beta_t(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t})$
+7. 如果当前时间步 $t>0$，则从后验分布中采样:  $x_{t-1} = \mu_\theta(x_t,t) + \sigma_t\epsilon, \epsilon \sim \mathcal{N}(0,I)$
+8. 如果当前时间步 $t=0$，则直接使用均值作为生成结果:  $x_0 = \mu_\theta(x_t,t)$
 ```python
 def sample(model, scheduler, num_samples, size, device="cpu"):
     model.eval()
@@ -398,7 +411,7 @@ class InceptionStatistics:
 ##### Inception Score (IS)
 IS 分数通过预训练的 Inception v3 网络评估生成图像的质量和多样性。计算公式为:
 
-$IS = \exp(\mathbb{E}_{x\sim p_g}[KL(p(y|x) || p(y))])$
+$$IS = \exp(\mathbb{E}_{x\sim p_g}[KL(p(y|x) || p(y))])$$
 
 其中:
 - $p_g$ 是生成器的分布
@@ -413,7 +426,7 @@ IS 分数越高说明:
 具体步骤为:
 1. 将所有图像分成 batch
 2. 对每组计算:
-    - 计算边缘分布p(y)，即对当前 batch 的 p(y|x) 取平均
+    - 计算边缘分布 $p(y)$，即对当前 batch 的 $p(y|x)$ 取平均
     - 计算 KL 散度
     - 取指数
 3. 返回所有组得分的均值和标准差
@@ -443,7 +456,7 @@ def calculate_inception_score(probs, splits=10):
 ##### Fréchet Inception Distance (FID)
 FID 分数通过比较真实图像和生成图像在 Inception 特征空间的分布来评估生成质量。计算公式为:
 
-$FID = ||\mu_r - \mu_g||^2 + Tr(\Sigma_r + \Sigma_g - 2(\Sigma_r\Sigma_g)^{1/2})$
+$$FID = ||\mu_r - \mu_g||^2 + Tr(\Sigma_r + \Sigma_g - 2(\Sigma_r\Sigma_g)^{1/2})$$
 
 其中:
 - $\mu_r, \mu_g$ 分别是真实图像和生成图像特征的均值

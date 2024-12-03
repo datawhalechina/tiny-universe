@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class NoiseScheduler(nn.Module):
-    def __init__(self, beta_start=0.0001, beta_end=0.02, num_steps=1000, device="cpu"):
+    def __init__(self, beta_start=0.0001, beta_end=0.02, num_steps=1000):
         """初始化噪声调度器
         Args:
             beta_start: β1,初始噪声水平
@@ -15,7 +15,6 @@ class NoiseScheduler(nn.Module):
         self.beta_start = beta_start
         self.beta_end = beta_end
         self.num_steps = num_steps
-        self.device = device
 
         # β_t: 线性噪声调度
         self.register_buffer('betas', torch.linspace(beta_start, beta_end, num_steps))
@@ -24,7 +23,7 @@ class NoiseScheduler(nn.Module):
         # α_bar_t = ∏(1-β_i) from i=1 to t
         self.register_buffer('alpha_bar', torch.cumprod(self.alphas, dim=0))
         # α_bar_(t-1)
-        self.register_buffer('alpha_bar_prev', torch.cat([torch.tensor([1.0], device=device), self.alpha_bar[:-1]], dim=0))
+        self.register_buffer('alpha_bar_prev', torch.cat([torch.tensor([1.0]), self.alpha_bar[:-1]], dim=0))
         # sqrt(α_bar_t)
         self.register_buffer('sqrt_alpha_bar', torch.sqrt(self.alpha_bar))
         # 1/sqrt(α_t)

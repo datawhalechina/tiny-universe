@@ -242,12 +242,11 @@ Final output shape: torch.Size([1, 3, 32, 32])
 首先我们需要定义一个噪声调度器，用于控制加噪过程，生成不同时间步的噪声图像。根据上面给出的公式，我们可以用代码对其进行实现。在前向过程中，我们需要定义变量 $\beta_t$ ， $\alpha_t$ ， $\bar{\alpha}_t$ ， $\sqrt{\bar{\alpha}_t}$ ， $\sqrt{1-\bar{\alpha}_t}$ 。这里我们使用 `register_buffer` 来定义变量，这样这些变量就会自动与模型参数一起保存和加载。
 ```python
 class NoiseScheduler(nn.Module):
-    def __init__(self, beta_start=0.0001, beta_end=0.02, num_steps=1000, device="cpu"):
+    def __init__(self, beta_start=0.0001, beta_end=0.02, num_steps=1000):
         super().__init__()
         self.beta_start = beta_start
         self.beta_end = beta_end
         self.num_steps = num_steps
-        self.device = device
 
         # β_t: 线性噪声调度
         self.register_buffer('betas', torch.linspace(beta_start, beta_end, num_steps))
@@ -302,7 +301,7 @@ def add_noise(self, x, t):
 我们在 `NoiseScheduler` 类中定义这些系数：
 ```python
 # α_bar_(t-1)
-self.register_buffer('alpha_bar_prev', torch.cat([torch.tensor([1.0], device=device), self.alpha_bar[:-1]], dim=0))
+self.register_buffer('alpha_bar_prev', torch.cat([torch.tensor([1.0]), self.alpha_bar[:-1]], dim=0))
 # 1/sqrt(α_t)
 self.register_buffer('sqrt_recip_alphas', torch.sqrt(1.0 / self.alphas))
 

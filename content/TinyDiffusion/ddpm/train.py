@@ -96,7 +96,7 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     train_loader, test_loader = load_transformed_dataset(args.img_size, args.batch_size)
-    noise_scheduler = NoiseScheduler(device=device)
+    noise_scheduler = NoiseScheduler().to(device)
     model = SimpleUnet().to(device)
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     criterion = nn.MSELoss()

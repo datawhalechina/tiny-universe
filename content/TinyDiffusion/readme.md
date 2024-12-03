@@ -20,45 +20,55 @@ DDPM 是一个基于马尔可夫链的生成模型。如上图所示，它通过
 
 #### 符号定义
 
-$p_\theta$: 参数为$\theta$的网络模型对去噪过程的估计概率分布
+$p_\theta$: 参数为 $\theta$ 的网络模型对去噪过程的估计概率分布
 
 $q$: 真实的图像分布
 
 $x_0$: 原始图片
 
-$x_t$: 加噪$t$步的图片
+$x_t$: 加噪 $t$ 步的图片
 
 #### 前向加噪过程
 
 在前向过程中，我们需要向 $x_{t-1}$ 中添加一个小的高斯噪声，得到下一时刻的 $x_t$ 的值：
+
 $$x_t = \sqrt{1-\beta_t}x_{t-1} + \sqrt{\beta_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$$
+
 其中，$\beta_t$ 为预设的方差系数，控制加噪过程，这是人为确定的。
 
 对应于原文公式（2）（文章中使用分布的形式来表示）:
+
 $$q(x_t | x_{t-1}) := \mathcal{N}(x_t; \sqrt{1-\beta}x_{t-1}, \beta_t I)$$
 
 <br>
 
 令 $\alpha_t = 1-\beta_t$ ，同时继续递推，利用高斯分布的叠加性质，可以得到从 $x_0$ 到 $x_t$ 的公式：
+
 $$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$$
+
 其中， $\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$ 。
 
 对应于原文公式（4）:
+
 $$q(x_t|x_0) := \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t)I)$$
 
 <br>
 
-当 $t$ 足够大（$t \rightarrow T$）时，$x_T$ 近似于标准正态分布 $x_T \rightarrow \epsilon$ 。这意味着经过足够多步的加噪后，图像已经完全变为随机噪声。这也是为什么在采样时可以直接从标准正态分布采样作为起点。
+当 $t$ 足够大（ $t \rightarrow T$ ）时， $x_T$ 近似于标准正态分布 $x_T \rightarrow \epsilon$ 。这意味着经过足够多步的加噪后，图像已经完全变为随机噪声。这也是为什么在采样时可以直接从标准正态分布采样作为起点。
 
 #### 逆向去噪过程
 
 在去噪过程中，我们需要根据当前时刻的 $x_t$，通过模型来预测前一时刻的 $x_{t-1}$ 的值。
 实际操作中，我们是通过让模型 $p_\theta$ 预测前向过程中从 $x_{t-1}$ 到 $x_t$ 加入的噪声来实现的：
+
 $$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)) + \sigma_t z, z \sim \mathcal{N}(0,I)$$
+
 其中， $\sigma_t^2 = \frac{(1-\alpha_t)(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}$ ， $\epsilon_\theta(x_t,t)$ 是模型根据 $x_t$ 和 $t$ 预测的正向过程中加入的噪声。
 
 这也就是原文的公式（6）～（7）（将 $x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon_\theta(x_t,t)$ 代入，同时利用 $\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$ ）：
+
 $$q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I)$$
+
 其中， $\tilde{\mu}_t(x_t, x_0) := \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha}_{t-1})}{1 - \bar{\alpha}_t} x_t$ ， $\tilde{\beta}_t := \frac{1 - \bar{\alpha}_{t-1}}{1 - \bar{\alpha}_t} \beta_t$ 。
 
 ## 上手实现
@@ -105,8 +115,10 @@ def show_tensor_image(image):
 #### 2. 模型定义
 
 首先，我们定义一个时间嵌入层，将时间步 $t$ 映射为高维向量，并在每个残差块中注入时间信息。参考 Transformer 中的位置编码方法，使用正余弦函数将时间步映射到高维空间。公式为：
+
 $$PE(t, 2i) = \sin(t / 10000^{2i/d})$$
 $$PE(t, 2i+1) = \cos(t / 10000^{2i/d})$$
+
 其中， $d$ 为嵌入维度， $i$ 为维度索引。
 ```python
 class SinusoidalPositionEmbeddings(nn.Module):

@@ -34,7 +34,7 @@ $x_t$: 加噪 $t$ 步的图片
 
 $$x_t = \sqrt{1-\beta_t}x_{t-1} + \sqrt{\beta_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$$
 
-其中，$\beta_t$ 为预设的方差系数，控制加噪过程，这是人为确定的。
+其中， $\beta_t$ 为预设的方差系数，控制加噪过程，这是人为确定的。
 
 对应于原文公式（2）（文章中使用分布的形式来表示）:
 
@@ -46,7 +46,7 @@ $$q(x_t | x_{t-1}) := \mathcal{N}(x_t; \sqrt{1-\beta}x_{t-1}, \beta_t I)$$
 
 $$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon, \epsilon \sim \mathcal{N}(0,I)$$
 
-其中， $\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$ 。
+其中， $\bar{\alpha}_t = \prod _{i=1}^t \alpha_i$ 。
 
 对应于原文公式（4）:
 
@@ -61,15 +61,15 @@ $$q(x_t|x_0) := \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t)I)$
 在去噪过程中，我们需要根据当前时刻的 $x_t$，通过模型来预测前一时刻的 $x_{t-1}$ 的值。
 实际操作中，我们是通过让模型 $p_\theta$ 预测前向过程中从 $x_{t-1}$ 到 $x_t$ 加入的噪声来实现的：
 
-$$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)) + \sigma_t z, z \sim \mathcal{N}(0,I)$$
+$$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon _\theta(x_t,t)) + \sigma_t z, z \sim \mathcal{N}(0,I)$$
 
-其中， $\sigma_t^2 = \frac{(1-\alpha_t)(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}$ ， $\epsilon_\theta(x_t,t)$ 是模型根据 $x_t$ 和 $t$ 预测的正向过程中加入的噪声。
+其中， $\sigma_t^2 = \frac{(1-\alpha_t)(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}$ ， $\epsilon _\theta(x_t,t)$ 是模型根据 $x_t$ 和 $t$ 预测的正向过程中加入的噪声。
 
-这也就是原文的公式（6）～（7）（将 $x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon_\theta(x_t,t)$ 代入，同时利用 $\bar{\alpha}_t = \prod_{i=1}^t \alpha_i$ ）：
+这也就是原文的公式（6）～（7）（将 $x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon _\theta(x_t,t)$ 代入，同时利用 $\bar{\alpha}_t = \prod _{i=1}^t \alpha_i$ ）：
 
 $$q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tilde{\beta}_t I)$$
 
-其中， $\tilde{\mu}_t(x_t, x_0) := \frac{\sqrt{\bar{\alpha}_{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha}_{t-1})}{1 - \bar{\alpha}_t} x_t$ ， $\tilde{\beta}_t := \frac{1 - \bar{\alpha}_{t-1}}{1 - \bar{\alpha}_t} \beta_t$ 。
+其中， $\tilde{\mu}_t(x_t, x_0) := \frac{\sqrt{\bar{\alpha} _{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha} _{t-1})}{1 - \bar{\alpha}_t} x_t$ ， $\tilde{\beta}_t := \frac{1 - \bar{\alpha} _{t-1}}{1 - \bar{\alpha}_t} \beta_t$ 。
 
 ## 上手实现
 
@@ -298,7 +298,7 @@ def add_noise(self, x, t):
 #### 4. 采样
 
 采样过程的思路为，从标准正态分布中采样初始噪声，然后逐步去噪，从 $t=T$ 到 $t=0$，最后将最终结果裁剪到 $[-1,1]$ 范围。
-在去噪过程中，我们需要获取采样需要的系数，包括 $\sqrt{\frac{1}{\bar{\alpha}_t}}$ ， $\sqrt{\frac{1}{\bar{\alpha}_t}-1}$ ， $\mu_\theta(x_t,t)$ ， $\log(\sigma_t^2)$ 。
+在去噪过程中，我们需要获取采样需要的系数，包括 $\sqrt{\frac{1}{\bar{\alpha}_t}}$ ， $\sqrt{\frac{1}{\bar{\alpha} _t}-1}$ ， $\mu _\theta(x_t,t)$ ， $\log(\sigma_t^2)$ 。
 我们在 `NoiseScheduler` 类中定义这些系数：
 ```python
 # α_bar_(t-1)
@@ -322,9 +322,9 @@ self.register_buffer('posterior_mean_coef2', (1.0 - self.alpha_bar_prev) * torch
 1. 从标准正态分布采样初始噪声 $x_T \sim \mathcal{N}(0,I)$
 2. 逐步去噪，从 $t=T$ 到 $t=0$
 3. 根据当前时间步 $t$ 和当前的样本图片 $x_t$，通过模型计算预测噪声 $\epsilon_\theta(x_t,t)$
-4. 计算 $x_0$ 的预测值:  $x_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \sqrt{\frac{1}{\bar{\alpha}_t}-1}\epsilon_\theta(x_t,t)$
-5. 计算后验分布均值:  $\mu_\theta(x_t,t) = \frac{\sqrt{\bar{\alpha}_{t-1}}\beta_t}{1-\bar{\alpha}_t}x_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}x_t$
-6. 计算后验分布方差的对数值:  $\log(\sigma_t^2) = \log(\tilde{\beta}_t) = \log(\frac{\beta_t(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t})$
+4. 计算 $x_0$ 的预测值:  $x_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \sqrt{\frac{1}{\bar{\alpha}_t}-1}\epsilon _\theta(x_t,t)$
+5. 计算后验分布均值:  $\mu_\theta(x_t,t) = \frac{\sqrt{\bar{\alpha}_{t-1}}\beta_t}{1-\bar{\alpha}_t}x_0 + \frac{\sqrt{\alpha _t}(1-\bar{\alpha} _{t-1})}{1-\bar{\alpha}_t}x_t$
+6. 计算后验分布方差的对数值:  $\log(\sigma_t^2) = \log(\tilde{\beta}_t) = \log(\frac{\beta_t(1-\bar{\alpha} _{t-1})}{1-\bar{\alpha}_t})$
 7. 如果当前时间步 $t>0$，则从后验分布中采样:  $x_{t-1} = \mu_\theta(x_t,t) + \sigma_t\epsilon, \epsilon \sim \mathcal{N}(0,I)$
 8. 如果当前时间步 $t=0$，则直接使用均值作为生成结果:  $x_0 = \mu_\theta(x_t,t)$
 ```python

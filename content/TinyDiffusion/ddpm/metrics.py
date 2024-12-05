@@ -177,7 +177,7 @@ if __name__ == "__main__":
     model = model.to(device)
     model.eval()
     
-    scheduler = NoiseScheduler(device=device)
+    scheduler = NoiseScheduler().to(device)
     
     # 加载真实图像数据
     train_loader, _ = load_transformed_dataset(image_size, batch_size=128)

@@ -6,7 +6,7 @@
 pip install -r requirements.txt
 ```
 
-* 下载 CIFAR-10 数据集到 `datasets/` 文件夹，保持目录结构为 `datasets/cifar-10-batches-py`
+* 下载 [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) 数据集到 `datasets/` 文件夹，保持目录结构为 `datasets/cifar-10-batches-py`
 * 训练模型： `python ddpm/train.py`
 * 采样图像： `python ddpm/sample.py`
 * 计算IS与FID： `python ddpm/metrics.py`
@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 ![DDPM马尔可夫链](fig/fig1.png)
 
-DDPM 是一个基于马尔可夫链的生成模型。如上图所示，它通过一个前向过程(Forward Process)逐步向数据中添加高斯噪声，最终得到纯噪声，然后通过一个反向过程(Reverse Process)从噪声中逐步恢复出数据。
+DDPM 是一个基于马尔可夫链的生成模型。如上图所示，它通过一个前向过程(Forward Process)逐步向数据中添加高斯噪声，最终得到纯噪声图像，然后通过一个反向过程(Reverse Process)从噪声图像中逐步恢复出数据。
 
 #### 符号定义
 

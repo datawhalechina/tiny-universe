@@ -6,7 +6,7 @@
 pip install -r requirements.txt
 ```
 
-* 下载 CIFAR-10 数据集到 `datasets/` 文件夹，保持目录结构为 `datasets/cifar-10-batches-py`
+* 下载 [CIFAR-10 数据集](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz) 到 `datasets/` 文件夹，保持目录结构为 `datasets/cifar-10-batches-py`
 * 训练模型： `python ddpm/train.py`
 * 采样图像： `python ddpm/sample.py`
 * 计算IS与FID： `python ddpm/metrics.py`
@@ -17,6 +17,8 @@ pip install -r requirements.txt
 ![DDPM马尔可夫链](fig/fig1.png)
 
 DDPM 是一个基于马尔可夫链的生成模型。如上图所示，它通过一个前向过程(Forward Process)逐步向数据中添加高斯噪声，最终得到纯噪声，然后通过一个反向过程(Reverse Process)从噪声中逐步恢复出数据。
+
+前向加噪的过程很简单，而我们需要根据前向过程的公式，推导得出模型反向去噪过程的公式，作为我们训练模型的目标。最后训练的时候，我们只需要反向去噪过程的公式就可以训练模型。
 
 #### 符号定义
 
@@ -58,7 +60,7 @@ $$q(x_t|x_0) := \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t)I)$
 
 #### 逆向去噪过程
 
-在去噪过程中，我们需要根据当前时刻的 $x_t$，通过模型来预测前一时刻的 $x_{t-1}$ 的值。
+在去噪过程中，我们需要根据当前时刻的 $x_t$ 和 $t$，通过模型来预测前一时刻的 $x_{t-1}$ 的值。
 实际操作中，我们是通过让模型 $p_\theta$ 预测前向过程中从 $x_{t-1}$ 到 $x_t$ 加入的噪声来实现的：
 
 $$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon _\theta(x_t,t)) + \sigma_t z, z \sim \mathcal{N}(0,I)$$
@@ -71,11 +73,19 @@ $$q(x_{t-1} \mid x_t, x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t, x_0), \tild
 
 其中， $\tilde{\mu}_t(x_t, x_0) := \frac{\sqrt{\bar{\alpha} _{t-1}} \beta_t}{1 - \bar{\alpha}_t} x_0 + \frac{\sqrt{\alpha_t} (1 - \bar{\alpha} _{t-1})}{1 - \bar{\alpha}_t} x_t$ ， $\tilde{\beta}_t := \frac{1 - \bar{\alpha} _{t-1}}{1 - \bar{\alpha}_t} \beta_t$ 。
 
+#### 总结
+
+尽管 DDPM 的推导过程比较复杂，但实际上我们推理时想要采样得到图片，所要用到的公式只有逆向去噪过程中得到 $x_{t-1}$ 的公式。这个公式可以简化表示为
+$$x_{t-1} = a (x_t -b \epsilon _\theta(x_t,t)) + c z, z \sim \mathcal{N}(0,I)$$
+其中，$a$, $b$, $c$ 为已知可以计算的常数， $\epsilon _\theta(x_t,t)$ 为模型预测的噪声，$z$ 为标准正态分布的噪声。
+
+我们训练模型的目标就是让模型预测的噪声 $\epsilon _\theta(x_t,t)$ 尽可能接近真实噪声。因此我们只需要最小化模型预测的噪声和真实噪声之间的 MSE 损失即可。
+
 ## 上手实现
 
 #### 1. 加载数据
 
-我们使用 CIFAR-10 数据集进行训练。首先下载数据到 `datasets/` 文件夹，并保持目录结构为 `datasets/cifar-10-batches-py`。
+我们使用 [CIFAR-10 数据集](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz)进行训练。首先下载数据到 `datasets/` 文件夹，并保持目录结构为 `datasets/cifar-10-batches-py`。
 
 接着，我们定义一个数据转换器来处理数据，对于训练集，我们进行随机水平翻转，并缩放到 $32 \times 32$ 大小。为了方便加入高斯噪声和去噪，我们需要将数据缩放到 $[-1,1]$ 范围。对于测试集，我们直接缩放到 $32 \times 32$ 大小，并将其缩放到 $[-1,1]$ 范围。
 ```python
@@ -114,7 +124,9 @@ def show_tensor_image(image):
 
 #### 2. 模型定义
 
-首先，我们定义一个时间嵌入层，将时间步 $t$ 映射为高维向量，并在每个残差块中注入时间信息。参考 Transformer 中的位置编码方法，使用正余弦函数将时间步映射到高维空间。公式为：
+DDPM 模型需要的输入包括噪声图像 $x_t$ 和时间步 $t$ ，输出为预测的噪声 $\epsilon _\theta(x_t,t)$ 。
+
+首先，我们定义一个时间嵌入层，它负责将时间信息注入到特征中，将时间步 $t$ 映射为高维向量。参考 Transformer 中的位置编码方法，使用正余弦函数将时间步映射到高维空间。公式为：
 
 $$PE(t, 2i) = \sin(t / 10000^{2i/d})$$
 $$PE(t, 2i+1) = \cos(t / 10000^{2i/d})$$
@@ -141,14 +153,14 @@ class SinusoidalPositionEmbeddings(nn.Module):
         return embeddings
 ```
 
-接着，我们定义一个 U-Net 的基本模块 Block，包含时间嵌入、上/下采样功能。第一次卷积扩展通道数，然后加入时间嵌入，接着进行第二次卷积，融合特征信息，最后进行上/下采样。
+接着，我们定义一个 U-Net 的基本模块 Block，包含时间嵌入、上/下采样功能。第一次卷积扩展通道数，然后加入时间嵌入，接着进行第二次卷积，融合特征信息，最后进行上/下采样。这里我们采用简化版的 U-Net，没有使用原论文中带有注意力机制的模型。
 ```python
 class Block(nn.Module):
     def __init__(self, in_channels, out_channels, time_emb_dim, up=False):
         super().__init__()
         self.time_mlp = nn.Linear(time_emb_dim, out_channels)
         if up:
-            self.conv1 = nn.Conv2d(2 * in_channels, out_channels, kernel_size=3, padding=1)
+            self.conv1 = nn.Conv2d(2 * in_channels, out_channels, kernel_size=3, padding=1)  # 由于 U-Net 的残差连接,上采样时会 concat 之前的特征，输入通道数需要翻倍
             self.transform = nn.ConvTranspose2d(out_channels, out_channels, kernel_size=4, stride=2, padding=1)
         else:
             self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
@@ -172,7 +184,7 @@ class Block(nn.Module):
         return self.transform(h)
 ```
 
-最后，我们将多个 Block 组合起来，形成一个 U-Net 模型。输入为图像和当前的时间步，输出与图像尺寸相同的预测噪声。
+最后，我们将多个 Block 组合起来，形成一个 U-Net 模型。模型首先会按照通道数 3->64->128->256->512->1024 的变化顺序进行下采样，此时通道数逐渐增加，特征图尺寸逐渐减小。然后按照通道数 1024->512->256->128->64->3 的变化顺序（这里是输出通道数，输入通道数因为残差连接会翻倍）进行上采样，此时通道数逐渐减少，特征图尺寸逐渐增加。每一层都会加入时间步信息，最后输出与输入图像尺寸相同的预测噪声。
 ```python
 class SimpleUnet(nn.Module):
     def __init__(self):
@@ -292,7 +304,7 @@ def add_noise(self, x, t):
 4. 计算预测噪声和真实噪声之间的MSE损失
 5. 反向传播和优化
 
-通过执行 `python ddpm/train.py` 我们可以训练模型，并保存模型参数。
+通过执行 `python ddpm/train.py` 我们可以训练模型，并保存模型参数，在 RTX-4090 上训练 200 个 epoch 需要 2 小时左右。
 
 #### 4. 采样
 
@@ -319,7 +331,7 @@ self.register_buffer('posterior_mean_coef2', (1.0 - self.alpha_bar_prev) * torch
 
 采样过程的具体流程为（依照原文公式）：
 1. 从标准正态分布采样初始噪声 $x_T \sim \mathcal{N}(0,I)$
-2. 逐步去噪，从 $t=T$ 到 $t=0$
+2. 从 $t=T$ 到 $t=0$，不断迭代循环，执行以下步骤：
 3. 根据当前时间步 $t$ 和当前的样本图片 $x_t$，通过模型计算预测噪声 $\epsilon_\theta(x_t,t)$
 4. 计算 $x_0$ 的预测值:  $x_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \sqrt{\frac{1}{\bar{\alpha}_t}-1}\epsilon _\theta(x_t,t)$
 5. 计算后验分布均值:  $\mu_\theta(x_t,t) = \frac{\sqrt{\bar{\alpha}_{t-1}}\beta_t}{1-\bar{\alpha}_t}x_0 + \frac{\sqrt{\alpha _t}(1-\bar{\alpha} _{t-1})}{1-\bar{\alpha}_t}x_t$
@@ -428,7 +440,7 @@ $$IS = \exp(\mathbb{E}_{x\sim p_g}[KL(p(y|x) || p(y))])$$
 - $p_g$ 是生成器的分布
 - $p(y|x)$ 是 Inception 模型对图像 x 的类别预测概率
 - $p(y)$ 是所有生成图像的平均类别分布
-- KL 是 KL 散度
+- KL 是 KL 散度，用于衡量两个概率分布之间的差距，计算公式为 $KL(p|q) = \sum_{i=1}^{n} p(i) \log \frac{p(i)}{q(i)}$
 
 IS 分数越高说明:
 1. 每张生成图像的类别预测越清晰(质量好)

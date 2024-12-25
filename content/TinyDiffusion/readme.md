@@ -516,3 +516,52 @@ def calculate_fid(real_features, fake_features):
 ```
 
 通过执行 `python ddpm/metrics.py` 我们可以计算 IS 分数和 FID 分数，我们使用训练好的 diffusion 模型生成 10000 张图片，并用 CIFAR-10 数据集作为真实图像数据集，来计算 IS 分数和 FID 分数。
+
+虽然不能通过单张图片来计算 IS 和 FID 分数，但是我们可以直观地看一下 IS、FID 分数不同的两个模型所生成的图片有什么样的效果。
+以下是本项目所使用的简化版 U-Net 模型（epochs=2000, IS=1.12, FID=41.63），以及 DDPM 原文所使用的带有 Attention 结构的 U-Net 模型（epochs=2000, IS=1.17, FID=14.10）在本项目的训练框架下，分别训练 200 和 2000 个 epochs 后生成的图像。
+
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="fig/unet-200.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">SimpleUnet 200 epochs</div>
+</center>
+
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="fig/attn-200.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">AttentionUnet 200 epochs</div>
+</center>
+
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="fig/unet.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">SimpleUnet 2000 epochs</div>
+</center>
+
+<center>
+    <img style="border-radius: 0.3125em;
+    box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" 
+    src="fig/attn.png">
+    <br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9;
+    display: inline-block;
+    color: #999;
+    padding: 2px;">AttentionUnet 2000 epochs</div>
+</center>
+
+可以看出，随着训练的进行，以及模型性能的提升，具有更高的 IS 分数和更低的 FID 分数的模型产生图像能够更好地分辨出具体类别，细节也更接近真实 CIFAR-10 数据集中的图像。

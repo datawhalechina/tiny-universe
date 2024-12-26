@@ -45,6 +45,8 @@
 
 ## *News*
 
+- ***2024.12.25：TinyDiffusion，从零上手Diffusion震撼发布！两小时完成图像生成预训练！***
+
 - ***2024.10.28：TinyLlama3，从零上手Llama预训练到加载模型推理，2G显存即可完成！***
 
 - ***2024.6.26：增加选修内容——高考数学评测，使TinyEval接入高考题目评测！！***
@@ -128,6 +130,7 @@
 - [肖鸿儒-项目负责人](https://github.com/Hongru0306)(Datawhale成员-同济大学)
 - [宋志学-项目负责人](https://github.com/KMnO4-zx)(Datawhale成员-中国矿业大学(北京))
 - [邹雨衡-项目负责人](https://github.com/logan-zou)(Datawhale成员-对外经济贸易大学)
+- [刘啸宇-核心贡献者](https://github.com/lxysl)(华中科技大学)
 
 #### 其他
 

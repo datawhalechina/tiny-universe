@@ -57,6 +57,16 @@
 
 ## 项目结构
 
+### [*TinyDiffusion*](./content/TinyDiffusion/)
+
+&emsp;&emsp;Diffusion模型作为当下最流行的图像生成模型，其图像生成效果优秀、训练过程稳定，已经成为了图像生成领域的主流方案。然而，对于初学者来说，Diffusion模型的公式原理过于复杂，对于如何从公式出发实现对应的代码也很困惑。
+
+&emsp;&emsp;***本项目手工搭建了一个最简化版本的DDPM模型，从论文中的公式出发，对应到具体的训练与采样过程代码实现，旨在帮助学习者更好地理解Diffusion模型的原理，熟悉训练、推理、评估的整套流程。***
+
+<div aligh=center>
+    <img src="./content/TinyDiffusion/fig/ddpm.png" style="width:90%;">
+</div>
+
 ### [*Qwen-Blog*](./content/Qwen-blog/) ([对应讲解视频](https://meeting.tencent.com/v2/cloud-record/share?id=0be29bb2-0648-4aeb-9baa-c9dc91dfc7a6&from=3&is-single=false&record_type=2))
 
 &emsp;&emsp;初学者在学习LLM时，往往对庞大的代码与各种封装的功能"谈码色变"~  

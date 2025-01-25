@@ -8,12 +8,13 @@
 &emsp;&emsp;本项目旨在为广大学习者搭建一个清晰的、可用的、可复现的大模型世界，帮助每一位有兴趣的学习者纯手工独立搭建自己的 **Tiny LLM Universe**。
 
 &emsp;&emsp;本项目的主要内容包括：
-1. 深入剖析大模型原理——Qwen Blog
-2. 逐步预训练一个手搓大模型——Tiny Llama3
-3. 如何评估你的大模型——Tiny Eval
-4. 纯手工搭建 RAG 框架——Tiny RAG
-5. 手搓一个最小的 Agent 系统——Tiny Agent
-6. 深入理解大模型基础——Tiny Transformer
+1. 手写图像生成模型--Tiny Diffusion
+2. 深入剖析大模型原理——Qwen Blog
+3. 逐步预训练一个手搓大模型——Tiny Llama3
+4. 如何评估你的大模型——Tiny Eval
+5. 纯手工搭建 RAG 框架——Tiny RAG
+6. 手搓一个最小的 Agent 系统——Tiny Agent
+7. 深入理解大模型基础——Tiny Transformer
 
 ## 项目意义
 

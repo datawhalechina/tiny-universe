@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -81,6 +83,7 @@ def train(model, train_loader, test_loader, noise_scheduler, criterion, optimize
             # 将图像从[-1, 1]范围缩放到[0, 1]范围,以便可视化
             images = ((images + 1) / 2).detach().cpu()
             fig = plot(images)
+            os.makedirs("samples", exist_ok=True)
             fig.savefig(f"samples/epoch_{epoch}.png")
     return model
 
@@ -93,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument('--img_size', type=int, default=32)
     args = parser.parse_args()
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "mps"
 
     train_loader, test_loader = load_transformed_dataset(args.img_size, args.batch_size)
     noise_scheduler = NoiseScheduler().to(device)

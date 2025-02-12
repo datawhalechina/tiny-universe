@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -81,6 +83,7 @@ def train(model, train_loader, test_loader, noise_scheduler, criterion, optimize
             # 将图像从[-1, 1]范围缩放到[0, 1]范围,以便可视化
             images = ((images + 1) / 2).detach().cpu()
             fig = plot(images)
+            os.makedirs("samples", exist_ok=True)
             fig.savefig(f"samples/epoch_{epoch}.png")
     return model
 

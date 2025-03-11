@@ -199,7 +199,7 @@ class Tokenizer:
 ```python
 # 测试 Tokenizer
 enc = Tokenizer('./data/tok4096.model') # 加载分词器
-tetx = 'Hello, world!' # 测试文本
+text = 'Hello, world!' # 测试文本
 print(enc.encode(text, bos=True, eos=True)) # 编码文本
 print(enc.decode(enc.encode(text, bos=True, eos=True))) # 解码文本
 

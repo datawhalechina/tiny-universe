@@ -1,0 +1,16 @@
+numpy==1.26.2
+Pillow==10.1.0
+accelerate>=0.26.0
+optimum
+torch==2.2.1+cu121
+torchaudio==2.2.1+cu121
+torchvision==0.17.1+cu121
+transformers==4.50.1
+diffusers==0.33.1
+modelscope==1.24.0
+huggingface-hub==0.29.3
+open_clip_torch==2.29.0
+qwen-vl-utils==0.0.8
+auto-gptq
+
+# clip请从readme中查看安装方式

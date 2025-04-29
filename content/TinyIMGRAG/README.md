@@ -3,7 +3,7 @@
 ## 简介
 常规的AIGC生图模型主要是基于提示词进行指导和生成的。但就像LLM会出现幻觉一样，Stable Diffusion等图像生成模型也同样存在一定的幻觉，并且很难控制图像多次生成时的一致性。
 
-鉴于此，我将会带领大家实现一个以SD模型为基础，结合CLIP图像检索，Qwen2.5-VL图像评判以及Qwen2.5提示词重写来的TinyIMGRAG项目，这实际上是一个简化版本的IMGRAG项目，只包含核心模块，项目没有调用api，所有模型全程均运行在一张24G的3090显卡上面。
+鉴于此，我将会带领大家实现一个以SD模型为基础，结合CLIP图像检索，Qwen2.5-VL图像评判以及Qwen2.5提示词重写来进行增强生图的TinyIMGRAG项目，这实际上是一个简化版本的IMGRAG项目，只包含核心模块，项目没有调用api，所有模型全程均运行在一张24G的3090显卡上面。
 
 下面是我所使用的一些基础环境与需要单独下载的包或模型的介绍：
 - OS Windows 10
@@ -312,7 +312,12 @@ def get_clip_similarities(prompts, image_paths, embeddings_path="./datasets/vect
             batch_scores = batch_scores.cpu().numpy().squeeze()
 
             # Update running totals
-            all_scores.extend(batch_scores)
+            if batch_scores.ndim == 0:  # 如果是标量
+                all_scores.append(batch_scores.item())  # 用 .item() 获取标量值
+            else:
+                all_scores.extend(batch_scores.tolist())  # 如果是多维数组，转换为列表
+
+            # all_scores.extend(batch_scores)
             all_paths.extend(valid_paths)
             all_embeddings = torch.cat([all_embeddings, embeddings])
 
@@ -647,7 +652,7 @@ if __name__ == '__main__':
 ![](./datasets/templates/enhanced_image.png)
 
 
-## 8. 总结
+## 总结
 
 恭喜你，经过上面的学习，相信你已经靠自己完整地搭建出了一个小小的IMGRAG啦。当然本项目只是实现了IMGRAG的基本功能，但采用的模型都是比较小的轻量模型，如果希望获得更好的效果，可以考虑使用gpt-4o的api进行图像差异判断和文本改写。
 

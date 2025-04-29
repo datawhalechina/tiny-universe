@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-@File    :   Embeddings.py
-@Time    :   2025/04/23 17:50:39
+@File    :   ImgEvaluator.py
+@Time    :   2025/04/29 19:34:11
 @Author  :   Cecilll
 @Version :   1.0
 @Desc    :   Image Generation and Retrieval Pipeline with careful GPU memory management

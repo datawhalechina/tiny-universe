@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-@File    :   Embeddings.py
-@Time    :   2025/04/23 17:50:39
+@File    :   ImgRetrieval.py
+@Time    :   2025/04/29 19:31:39
 @Author  :   Cecilll
 @Version :   1.0
 @Desc    :   Image Generation and Retrieval Pipeline with careful GPU memory management
@@ -13,6 +13,7 @@ import torch
 import clip
 import numpy as np
 from PIL import Image
+
 
 def get_clip_similarities(prompts, image_paths, embeddings_path="./datasets/vector_bases", bs=2, k=5, device='cuda:0',
                           model_path="./model/ViT-B-32.pt"):
@@ -66,7 +67,12 @@ def get_clip_similarities(prompts, image_paths, embeddings_path="./datasets/vect
             batch_scores = batch_scores.cpu().numpy().squeeze()
 
             # Update running totals
-            all_scores.extend(batch_scores)
+            if batch_scores.ndim == 0:  # 如果是标量
+                all_scores.append(batch_scores.item())  # 用 .item() 获取标量值
+            else:
+                all_scores.extend(batch_scores.tolist())  # 如果是多维数组，转换为列表
+
+            # all_scores.extend(batch_scores)
             all_paths.extend(valid_paths)
             all_embeddings = torch.cat([all_embeddings, embeddings])
 
@@ -123,7 +129,7 @@ def _get_image_embeddings(image_paths, batch_idx, model, preprocess, device, emb
 
 if __name__ == "__main__":
 
-    clip_texts = []
+    clip_texts = ['a cradle']
     for clip_text in clip_texts:
         print(clip_text)
 

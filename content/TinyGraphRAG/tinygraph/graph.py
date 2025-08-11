@@ -57,7 +57,7 @@ class TinyGraph:
         - emb: 嵌入模型（Embedding）实例
         - working_dir: 工作目录，默认为"workspace"
         """
-        self.driver = driver = GraphDatabase.driver(
+        self.driver = GraphDatabase.driver(
             url, auth=(username, password)
         )  # 创建Neo4j数据库驱动
         self.llm = llm  # 设置语言模型

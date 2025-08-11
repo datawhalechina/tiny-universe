@@ -1,573 +1,1058 @@
-# Tiny-Graphrag使用指南与代码解读
->此README包括两部分：1.引言；2.正文
-## 引言：
-- Tiny-Graphrag是一个基于Graphrag的简化版本，包含了Graphrag的核心功能: 1.知识图谱构建；2.图检索优化；3.生成增强。创建Graphrag项目的目的是帮助大家理解Graphrag的原理并提供Demo来实现。
-- 本项目中信息传输的总体流程如下所示：
+# TinyGraphRAG
 
-<div align="center">
-    <img src="images/Tiny-Graphrag%E6%B5%81%E7%A8%8B%E5%9B%BE.png" width="400px">
-</div>
+## 项目动机
 
-- 用通俗语言来描述就是：**输入问题后，通过图结构运算层的计算，将得到的上下文交给一个“聪明的学生”（即大语言模型 LLM），让它基于这些上下文进行推理和回答问题。**
-## 正文：
->正文包括三部分：1.Graphrag简要介绍；2.Tiny-Graphrag 使用方法；3.Tiny-Graphrag代码解读
-### Graphrag简要介绍
----
-- 是什么？
-    - 基于知识图谱的检索增强生成技术，通过显式建模实体关系提升rag的多跳推理能力。
-- 提出时能够解决什么问题？
-    - 传统rag的局限：单跳检索（无法回答"特朗普和拜登的母校有何共同点？"类问题） 语义相似度≠逻辑相关性     
-    - Graphrag的改进：通过图路径实现多跳推理（如"特朗普→宾大→法学←拜登"）
-- 以微软Graphrag为例，其核心功能如下表所示：
+随着大模型技术的不断发展，人们越来越关注于大模型的幻觉问题，大模型在生成文本时，往往会受到干扰，给出不真实，不合理的内容，同时由于大模型内容知识更新的困难性，我们难以负担高昂的更新成本，因此 RAG 技术应运而生，通过召回参考文本，我们可以为大模型在回答用户问题前，提供充足的预备知识。然而，RAG 技术同样存在一些缺陷。关于 RAG 技术的实现，你可以参考 tiny-universe 中的 tiny-rag 项目。
 
-| 模块 | 模块描述 | 
-|:------|:-----|
-| 知识图谱构建 | 核心功能之一，将文本或结构化数据转化为图结构（节点和边）。  |
-| 图检索优化   | 基于图谱的拓扑关系（如多跳路径、子图匹配）改进传统向量检索。    | 
-| 生成增强    | 利用检索到的图结构（如子图、路径）增强大模型的生成逻辑性和准确性。  | 
+RAG 技术在分块策略上存在一些问题，以下面的文本举例：
 
-### Tiny-Graphrag 使用方法
----
-  - 本项目给出了Tiny-Graphrag使用方法，初学者可以先直接跑通这个程序，然后再继续了解具体原理。这样的学习曲线更缓和，能有效防止卡在代码理解层面而对代码的整体作用缺少理解，难以应用。下面给出Tiny-Graphrag使用的具体方法。
-  - Tiny-Graphrag 使用方法
-    - 个人主机环境：ubuntu24.04
-    - 代码下载
-      ```bash
-        git clone https://github.com/limafang/tiny-graphrag.git
-        cd tiny-graphrag
-      ```
-    - 主机环境配置
-      1. 安装：`neo4j --version 5.26.5`，可使用wget配合pip来完成
-      2. 安装插件：`GDS`。 可从github上找到与`neo4j 5.26.5`**兼容**的`GDS 2.13.2`，将这个.jar文件放到neo4j的插件文件夹里。
-      3. 安装：`OpenJDK-21`。命令行`sudo apt install openjdk-21-jre-headless`
-    - 使用conda创建虚拟环境（虚拟环境创建此处仅作参考，学习者可以使用自己常用的开发环境来运行）
-        ```bash
-        conda create --name tinygrag python=3.10 -y # 虚拟环境创建
-        conda activate tinygrag # 命令行激活虚拟环境
-        conda install pip -y # 在conda环境内安装pip包管理工具
-        ```
-    - 环境中安装requirements.txt中的依赖，对应命令行为`pip install -r requirements.txt`
-    - 先运行Neo4j，命令行为：`sudo neo4j start`，然后在浏览器中登陆到neo4j，默认网址为：http://localhost:7474
-    - 运行`help.ipynb`
-      - 注意每次全部重新运行都需要重启内核，否则在本地查询等步骤会报错
-      - 使用本电脑首次运行完成耗时15分钟
-    - 对于非首次运行的打开过程为：
-      1. 激活当前项目的对应虚拟环境
-      2. 打开neo4j
-      3. 运行`help.ipynb`
-    - 其他要求：
-      - 本项目以zhipuAI作为调用的大模型，需要调用其API，所以需要注册智谱API的帐号，从而获得API
-### Tiny-Graphrag代码解读
----
->下面将按照Graphrag的三个核心功能来介绍本项目的代码：
-#### 1. 知识图谱构建
+```
+chunk 1
+小明的爷爷叫老明
 
-- 运行代码前需要启动neo4j客户端。
-- 模块导入，并添加API，其中API可以手动添加，也可以通过将API设置为环境变量的方法添加，本项目采用后者。
-    ```python
-    # 导入模块
-    import os
-    import sys
+chunk 2
+小明的爷爷是一个木匠
 
-    from Tiny-Graph.graph import Tiny-Graph
-    from Tiny-Graph.embedding.zhipu import zhipuEmb
-    from Tiny-Graph.llm.zhipu import zhipuLLM
+chunk 3
+小明的爷爷...
+```
 
-    from neo4j import GraphDatabase
-    from dotenv import load_dotenv # 用于加载环境变量
+假如我们希望查询：“小明认识的木匠叫什么名字？”，很明显，这段话的内容需要召回两个 chunk 来回答，我们可以预测的是，chunk 2 的相关性分数将会相当的高，但其对我们回答这个问题的贡献度却很低，而真正关键的 chunk 1 片段却有可能无法被召回，原因就在于，分块策略实际上严重破坏了文档的语义连续性，已经有一些工作着手于解决这个问题，比如 Jina AI 提出的 late chunking 策略等等，同时 GraphRAG 也是一个解决这个问题的好方案。
 
-    sys.path.append('.') # 添加当前目录到 Python 路径
-    print(os.getcwd())  # 验证下当前工作路径
+同时，RAG 技术还面临一个比较棘手的问题，即全局信息的查询，假如我们有一个文档，我们希望“查询文档中小明所有家人的信息”，这同样是一个重大挑战，因为这些信息很有可能存在与各个位置，按照分块检索的难度很大，同时，还有可能涉及一些复杂的推理问题，同样已经有一些工作提出了 Agentic RAG 策略来尝试解决， GraphRAG 也提供了自己的解决方案，即通过图中的社区聚类，预先聚类信息用以应对用户回答。
 
-    # 加载 .env文件, 从而导入api_key
-    load_dotenv()  # 加载工作目录下的 .env 文件
-    ```
-##### 1.1 emb、llm类的实例化
--  将zhipuAi的嵌入模型（zhipuEmb）、zhipuLLM以及Tiny-Graph类分别实例化：
-- llm以及模型的embedding服务，依次完成实例化。其中的llm以及embedding可以根据自己的需要再调整，此处作为示例用，两者分别传入了嵌入模型 / LLM模型的名称以及API_KEY
-- 对应代码
-    ```python
-    emb = zhipuEmb(
-        model_name="embedding-2",  # 嵌入模型
-        api_key=os.getenv('API_KEY')
-    )
-    llm = zhipuLLM(
-        model_name="glm-3-turbo",  # LLM
-        api_key=os.getenv('API_KEY')
-    )
-    ```
-- 以`zhipuEmb`为例，分析下类的继承关系。此处的`zhipuEmb`类是继承于`BaseEmb`类，在类实例化的过程（此处为`emb = zhipuEmb`）中会先调用`__init__`方法；
-    ```python
-    class zhipuEmb(BaseEmb):
-        def __init__(self, model_name: str, api_key: str, **kwargs):
-            super().__init__(model_name=model_name, **kwargs)
-            self.client = ZhipuAI(api_key=api_key) # 创建 ZhipuAI 客户端，self.client 是zhipuEmb类的一个属性
+**需要注意的是，由于篇幅限制，我们无法展示完整的整个实现过程，但是，我们将在文档中讲解每个必要的实现步骤以及背后的思考，您可以通过这些内容快速理解如何实现一个 GraphRAG 系统，如果您有更多时间，我仍然建议您阅读完整代码。**
 
-        def get_emb(self, text: str) -> List[float]:
-            emb = self.client.embeddings.create(
-                model=self.model_name,
-                input=text,
-            )
-            return emb.data[0].embedding
-    ```
-- 为了调用`zhipuEmb`继承的`BaseEmb`类的属性，使用`super().__init__(model_name=model_name, **kwargs)`将模型名称传入`zhipuEmb`继承的`BaseEmb`类；
-- 而`BaseEmb`类继承自`ABC`类（`Abstract Base Class`，抽象基类）
-- `zhipuLLM`的实例化过程与此类似。
-##### 1.2 Tiny-Graph类的实例化
-- 传入了neo4j的默认网址、用户名、密码、llm、emb。
-- 对应代码
-    ```python
-    graph = Tiny-Graph(
-        url="neo4j://localhost:7687",
-        username="neo4j",
-        password="neo4j-passwordTGR",
-        llm=llm,
-        emb=emb,
-    )
-    ```
-- 实例化过程自动调用的`__init__`方法完成了创建Neo4j数据库驱动、设置语言模型、设置嵌入模型、设置工作目录等工作，详细注释见下方代码：
-    ```python
-    class Tiny-Graph:
-        """
-        一个用于处理图数据库和语言模型的类。
+**由于并未展示完整实现，笔者建议读者在阅读时，可以一边完成教程中的代码，一边思考如何补充至完整实现，您可以随时查看笔者的实现，以帮助您理解。**
 
-        该类通过连接到Neo4j图数据库，并使用语言模型（LLM）和嵌入模型（Embedding）来处理文档和图数据。
-        它还管理一个工作目录，用于存储文档、文档块和社区数据。
-        """
+## 前置实现
 
-        def __init__(
-            self,
-            url: str,  # Neo4j数据库的URL
-            username: str,  # Neo4j数据库的用户名
-            password: str,  # Neo4j数据库的密码
-            llm: BaseLLM,  # 语言模型（LLM）实例
-            emb: BaseLLM,  # 嵌入模型（Embedding）实例
-            working_dir: str = "workspace",  # 工作目录，默认为"workspace"
-        ):
-            """
-            初始化Tiny-Graph类。
+接下来，我们将带领大家，从 0 开始，实现一个复杂的 GraphRAG 系统。首先，我们将完成一些基本的准备过程
 
-            参数:
-            - url: Neo4j数据库的URL
-            - username: Neo4j数据库的用户名
-            - password: Neo4j数据库的密码
-            - llm: 语言模型（LLM）实例
-            - emb: 嵌入模型（Embedding）实例
-            - working_dir: 工作目录，默认为"workspace"
-            """
-            self.driver = driver = GraphDatabase.driver(
-                url, auth=(username, password)
-            )  # 创建Neo4j数据库驱动
-            self.llm = llm  # 设置语言模型
-            self.embedding = emb  # 设置嵌入模型
-            self.working_dir = working_dir  # 设置工作目录
-            os.makedirs(self.working_dir, exist_ok=True)  # 创建工作目录（如果不存在）
+### 1. 实现 LLM 模块
 
-            # 定义文档、文档块和社区数据的文件路径
-            self.doc_path = os.path.join(working_dir, "doc.txt")
-            self.chunk_path = os.path.join(working_dir, "chunk.json")
-            self.community_path = os.path.join(working_dir, "community.json")
+首先我们需要实现 LLM 模块，这是系统中最基本的模块，我们将利用大模型完成文档的清洗，信息提取等工作，可以说 GraphRAG 的一部分精髓即为使用大模型预先处理文档信息，方便后续进行检索，这里我们使用 zhipuai 的 api 来实现。
 
-            # 创建文件（如果不存在）
-            create_file_if_not_exists(self.doc_path)
-            create_file_if_not_exists(self.chunk_path)
-            create_file_if_not_exists(self.community_path)
+```python
+from abc import ABC, abstractmethod
+from typing import Any, Optional
 
-            # 加载已加载的文档
-            self.loaded_documents = self.get_loaded_documents()
-    ```
-##### 1.3 添加文档到图数据库
-- 使用Tiny-Graph类下的`add_document`方法来将指定路径的文档添加到图数据库中`graph.add_document("example/data.md")`。该方法会自动处理文档的分块和嵌入生成，并将结果存储在图数据库中。这里的路径是相对路径，指向当前工作目录下的example/data.md文件。其主要功能如下：
-###### 1.3.1 检查文档是否已经分块；
-- 对应代码
-    ```python
-    # ================ Check if the document has been loaded ================
-    if filepath in self.get_loaded_documents():
-        print(
-            f"Document '{filepath}' has already been loaded, skipping import process."
-        )
-        return # 在这段代码中，return 的作用是 终止函数的执行，并返回到调用该函数的地方
-    ```
-- 功能：检查指定文档是否已经被加载过，避免重复处理。
-- 实现步骤：
-    1. 调用`self.get_loaded_documents()`方法，读取已加载文档的缓存文件（doc.txt），返回一个包含已加载文档路径的集合
-    2. 检查文档路径是否已经存在，如果已经存在，则打印提示信息
-    3. 中止函数的执行，return在此段代码中的作用是中止函数的执行，并返回到调用该函数的地方。
-    2. 将文档分割成块（此处就是分割为json格式的文件）；
+class BaseLLM(ABC):
+    """Interface for large language models.
 
+    Args:
+        model_name (str): The name of the language model.
+        model_params (Optional[dict[str, Any]], optional): Additional parameters passed to the model when text is sent to it. Defaults to None.
+        **kwargs (Any): Arguments passed to the model when for the class is initialised. Defaults to None.
+    """
 
-###### 1.3.2. 将文档分割成块（此处就是分割为json格式的文件）
-- 对应代码
-    ```python
-    # ================ Chunking ================
-    chunks = self.split_text(filepath)
-    existing_chunks = read_json_file(self.chunk_path)
-
-    # Filter out chunks that are already in storage
-    new_chunks = {k: v for k, v in chunks.items() if k not in existing_chunks}
-
-    if not new_chunks:
-        print("All chunks are already in the storage.")
-        return
-
-    # Merge new chunks with existing chunks
-    all_chunks = {**existing_chunks, **new_chunks}
-    write_json_file(all_chunks, self.chunk_path)
-    print(f"Document '{filepath}' has been chunked.")
-    ```
-- 功能：将文档分割成多个小块（chunks），并将这些分块存储到一个JSON文件中，避免重复存储已经存在的分块。
-- 实现步骤：
-    1. 分割文档：调用`chunks = self.split_text(filepath)`方法，将文档分割成多个小块，并且相邻小块之间有一定重叠，返回值chunks是一个字典，键是分块的唯一ID，值是分块的内容。
-    2. 读取已经存储的分块：`existing_chunks = read_json_file(self.chunk_path)`，调用该方法从chunk.json中读取已经存储的分块，返回值existing_chunks是一个字典，包含所有已经存储的分块。
-    3. 过渡新分块：`new_chunks = {k: v for k, v in chunks.items() if k not in existing_chunks}`，使用字典推导式过滤出新的分块，返回值new_chunks是一个字典，包含所有新的分块。
-    4. 检查是否有新的分块,如果new_chunks为空，也就是没有新的分块需要存储的话，打印提示信息并终止函数执行。
-        ```python
-            if not new_chunks:
-            print("All chunks are already in the storage.")
-            return            
-        ```
-    5. 合并分块：`all_chunks = {**existing_chunks, **new_chunks}`，使用字典包语法将existing_chunks和new_chunks合并为一个新的字典。
-    6. 写入JSON文件：`write_json_file(all_chunks, self.chunk_path)`，将合并后的分块写入chunk.json文件。
-    7. 打印提示信息。
-
-###### 1.3.3 从块中提取实体（entities）和三元组（triplets）；
-- 对应代码
-    ```python
-    # ================ Entity Extraction ================
-    all_entities = []# 用于存储从文档块中提取的实体
-    all_triplets = []# 用于存储从所有文档中提取的三元组
-
-    # 遍历文档块，每个分块有一个唯一的chunk_id和对应的内容chunk_content
-    for chunk_id, chunk_content in tqdm(
-        new_chunks.items(), desc=f"Processing '{filepath}'"
+    def __init__(
+        self,
+        model_name: str,
+        model_params: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
     ):
+        self.model_name = model_name
+        self.model_params = model_params or {}
+
+    @abstractmethod
+    def predict(self, input: str) -> str:
+        """Sends a text input to the LLM and retrieves a response.
+
+        Args:
+            input (str): Text sent to the LLM
+
+        Returns:
+            str: The response from the LLM.
+        """
+```
+
+如上是一个调用大模型的抽象接口，这可以帮助我们统一调用大模型的格式，我们继承这个基类，实现调用大模型的接口。
+
+```python
+from zhipuai import ZhipuAI
+from typing import Any, Optional
+from .base import BaseLLM
+
+
+class zhipuLLM(BaseLLM):
+    """Implementation of the BaseLLM interface using zhipuai."""
+
+    def __init__(
+        self,
+        model_name: str,
+        api_key: str,
+        model_params: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ):
+        super().__init__(model_name, model_params, **kwargs)
+        self.client = ZhipuAI(api_key=api_key)
+
+    def predict(self, input: str) -> str:
+        """Sends a text input to the zhipuai model and retrieves a response.
+
+        Args:
+            input (str): Text sent to the zhipuai model
+
+        Returns:
+            str: The response from the zhipuai model.
+        """
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": input}],
+        )
+        return response.choices[0].message.content
+```
+
+完成搭建后，我们可以通过尝试调用 predict 方法来测试是否成功。
+
+```python
+llm = zhipuLLM(model_name="....", api_key="...")
+print(llm.predict("Hello, how are you?"))
+```
+
+当观察到 LLM 正确回复后，我们这一模块的构建就完成了。
+
+### 2. 实现 Embedding 模块
+
+除了调用大模型，我们还需要实现 Embedding 模块，Embedding 模块用于将文本转换为向量，我们将使用向量来表示文档中的信息，这样的好处是，我们可以通过向量的相似度来衡量文档与查询之间的相似度，从而召回对回复用户问题最有帮助的文档。
+
+构建 Embedding 模块的方法与构建 LLM 模块类似。
+
+```python
+from abc import ABC, abstractmethod
+from typing import List, Any, Optional
+
+
+class BaseEmb(ABC):
+    def __init__(
+        self,
+        model_name: str,
+        model_params: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ):
+        self.model_name = model_name
+        self.model_params = model_params or {}
+
+    @abstractmethod
+    def get_emb(self, input: str) -> List[float]:
+        """Sends a text input to the embedding model and retrieves the embedding.
+
+        Args:
+            input (str): Text sent to the embedding model
+
+        Returns:
+            List[float]: The embedding vector from the model.
+        """
+        pass
+
+from zhipuai import ZhipuAI
+from typing import List
+from .base import BaseEmb
+
+
+class zhipuEmb(BaseEmb):
+    def __init__(self, model_name: str, api_key: str, **kwargs):
+        super().__init__(model_name=model_name, **kwargs)
+        self.client = ZhipuAI(api_key=api_key)
+
+    def get_emb(self, text: str) -> List[float]:
+        emb = self.client.embeddings.create(
+            model=self.model_name,
+            input=text,
+        )
+        return emb.data[0].embedding
+```
+
+完成搭建后，我们可以通过尝试调用 get_emb 方法来测试是否成功。
+
+```python
+emb = zhipuEmb(model_name="....", api_key="...")
+print(emb.get_emb("Hello, how are you?"))
+```
+
+当观察到 Embedding 正确给出了编码后的向量，我们这一模块的构建就完成了。
+
+### 3. 实现与 Neo4j 的交互
+
+为了存储数据，我们还需要预先准备好一个图数据库，用来进行图的存储与查询，以及一些必要的图操作算法，我们选择使用 Neo4j 作为图数据库，Neo4j 是一个基于图的数据库，可以方便的进行图的存储与查询，同时，Neo4j 也提供了丰富的图操作算法，可以方便的进行图的分析。
+
+我们使用 Neo4j 的提供的 neo4j 库来实现与 Neo4j 的交互。
+
+```python
+from neo4j import GraphDatabase
+
+driver = GraphDatabase.driver(
+            url, auth=(username, password)
+        )  # 创建Neo4j数据库驱动
+```
+
+完成数据库驱动的设置后，我们就可以采用下面的方法来运行 Cypher 查询语句了，Cypher 查询语句是 Neo4j 的查询语言，类似于 SQL 语言，我们后续的所有操作基本都通过 Cypher 查询语句来实现。
+
+```python
+with driver.session() as session:
+    result = session.run("MATCH (n) RETURN n") # 查询图中的所有节点
+    for record in result:
+        print(record)
+```
+
+## 核心实现
+
+GraphRAG 的主要流程如图所示：
+
+![workflow](images/workflow.png)
+
+首先，让我们来梳理一下 GraphRAG 的工作流程，GraphRAG 的一个核心思想在于，我们需要把用户提供的文档内容转化为三元组用以构建知识图谱，这样在检索时，对于同一实体的信息，他们将会被聚集起来，以查询：“小明的个人信息都有哪些？” 为例，像这样的查询在传统 RAG 方法中需要召回大量文本段，并且存在召回不全，信息冗余等问题，而通过图数据库，我们可以直接召回小明这个关键实体以及小明实体所连接的边与节点回答用户问题，从而解决。
+
+因此，第一步，首先我们需要构建数据预处理模块，数据预处理模块主要负责对原始数据进行清洗、分词、实体识别与关系抽取，将非结构化数据转化为结构化的图数据格式。
+
+### 数据预处理
+
+首先，我们需要读取用户上传的文档，这一步相当简单，我们可以使用 python 自带的文件处理 api 来读取文件内容
+
+```python
+with open(filepath, "r", encoding="utf-8") as f:
+    content = f.read()
+```
+
+完成读取后，我们就需要对文档内容进行解析了，这一步的主要目标为解析得到三元组，由于用户的原始文档内容长度可能超出我们 LLM 的最大输入长度，因此，我们需要将文档内容进行分块，分块后，我们再将每个分块送入 LLM 进行解析，得到三元组。
+
+首先，我们对文档进行分块，分块的策略为，我们使用滑动窗口的策略，将文档内容分割成多个片段，每个片段的长度为 segment_length，相邻片段之间有 overlap_length 的重叠。
+
+```python
+def split_text(self,file_path:str, segment_length=300, overlap_length=50) -> Dict:
+        """
+        将文本文件分割成多个片段，每个片段的长度为segment_length，相邻片段之间有overlap_length的重叠。
+
+        参数:
+        - file_path: 文本文件的路径
+        - segment_length: 每个片段的长度，默认为300
+        - overlap_length: 相邻片段之间的重叠长度，默认为50
+
+        返回:
+        - 包含片段ID和片段内容的字典
+        """
+        chunks = {}  # 用于存储片段的字典
+        with open(file_path, "r", encoding="utf-8") as file:
+            content = file.read()  # 读取文件内容
+
+        text_segments = []  # 用于存储分割后的文本片段
+        start_index = 0  # 初始化起始索引
+
+        # 循环分割文本，直到剩余文本长度不足以形成新的片段
+        while start_index + segment_length <= len(content):
+            text_segments.append(content[start_index : start_index + segment_length])
+            start_index += segment_length - overlap_length  # 更新起始索引，考虑重叠长度
+
+        # 处理剩余的文本，如果剩余文本长度小于segment_length但大于0
+        if start_index < len(content):
+            text_segments.append(content[start_index:])
+
+        # 为每个片段生成唯一的ID，并将其存储在字典中
+        for segement in text_segments:
+            chunks.update({compute_mdhash_id(segement, prefix="chunk-"): segement})
+
+        return chunks
+```
+
+完成分块后，我们即通过 LLM 对每个分块进行解析，得到三元组。LLM 被提示从每个文本块中提取关键实体及其之间的关系。LLM 将首先被提示提取文本中的实体，为实体生成简洁的描述性文本。接着根据当前文本块中的实体，LLM 被提示从文本中提取这些实体之间的关系，同样生成简介的描述性文本，以以下文本块为例：
+
+```
+在最新的研究中，我们探索了机器学习算法在疾病预测中的潜力。我们使用支持向量机和随机森林算法对医疗数据进行分析。结果表明，这些模型在通过特征选择和交叉验证预测疾病风险方面表现良好。尤其值得一提的是，随机森林模型在处理过拟合问题方面表现出色。此外，我们还探讨了深度学习在医学图像分析中的应用。
+```
+
+LLM 被引导提取如下信息：
+
+实体 支持向量机，描述为：“用于分类和回归任务的监督学习模型，在高维空间中特别有效。”
+
+实体 随机森林算法，描述为：“一种集成学习方法，建立多个决策树并将它们合并在一起以获得更准确、更稳定的预测，通常用于减少过度拟合。
+
+实体间关系：支持向量机 与 随机森林算法，关系描述为：“随机森林算法在处理过拟合问题方面表现优于支持向量机。”
+
+这些提示可以根据语料库所属的具体领域进行定制，例如通过选择领域内具有代表性的少量示例作为上下文，提升 LLM 的抽取准确性和语义理解能力。
+
+我们定义实体的基本结构如下：
+
+```python
+class Entity:
+    name: str
+    desc: str
+    chunks_id: list
+    entity_id: str
+```
+
+其中 name 表示实体的名称，例如 “小明”， “随机森林算法” 等。
+desc 表示实体的描述，例如 “小明是北京大学的学生”， “随机森林算法是机器学习中的一个集成学习方法” 等。
+chunks_id 表示实体所属的文本块 ID，
+entity_id 表示实体的唯一 ID。
+
+抽取实体使用的提示词如下：
+
+```python
+GET_ENTITY = """
+## Goal
+
+You are an experienced machine learning teacher.
+You need to identify the key concepts related to machine learning that the article requires students to master. For each concept, provide a brief description that explains its relevance and importance in the context of the article.
+
+## Example
+
+article:
+"In the latest study, we explored the potential of using machine learning algorithms for disease prediction. We used support vector machines (SVM) and random forest algorithms to analyze medical data. The results showed that these models performed well in predicting disease risk through feature selection and cross-validation. In particular, the random forest model showed better performance in dealing with overfitting problems. In addition, we discussed the application of deep learning in medical image analysis."
+
+response:
+<concept>
+    <name>Support Vector Machine (SVM)</name>
+    <description>A supervised learning model used for classification and regression tasks, particularly effective in high-dimensional spaces.</description>
+</concept>
+<concept>
+    <name>Random Forest Algorithm</name>
+    <description>An ensemble learning method that builds multiple decision trees and merges them together to get a more accurate and stable prediction, often used to reduce overfitting.</description>
+</concept>
+<concept>
+    <name>Feature Selection</name>
+    <description>The process of selecting a subset of relevant features for use in model construction, crucial for improving model performance and reducing complexity.</description>
+</concept>
+<concept>
+    <name>Overfitting</name>
+    <description>A common issue where a model learns the details and noise in the training data to the extent that it negatively impacts the model's performance on new data.</description>
+</concept>
+<concept>
+    <name>Deep Learning</name>
+    <description>A subset of machine learning that uses neural networks with many layers to model complex patterns in large datasets, often applied in image and speech recognition tasks.</description>
+</concept>
+
+## Format
+
+Wrap each concept in the HTML tag <concept>, and include the name of the concept in the <name> tag and its description in the <description> tag.
+
+## Article
+
+{text}
+
+## Your response
+"""
+
+```
+
+d
+收到 LLM 的回复后，我们还需要进一步解析 LLM 的回复用来得到可用的实体数据，在上面的提示词中，我们要求 LLM 的回复格式为 HTML 格式，因此，我们需要提取指定标签内的内容，这一步我们使用正则表达式来实现。
+
+```python
+def get_text_inside_tag(html_string: str, tag: str):
+    # html_string 为待解析文本，tag为查找标签
+    pattern = f"<{tag}>(.*?)<\/{tag}>"
+    try:
+        result = re.findall(pattern, html_string, re.DOTALL)
+        return result
+    except SyntaxError as e:
+        raise ("Json Decode Error: {error}".format(error=e))
+
+def get_entity(self, text: str, chunk_id: str) -> List[Dict]:
+        """
+        从给定的文本中提取实体，并为每个实体生成唯一的ID和描述。
+
+        参数:
+        - text: 输入的文本
+        - chunk_id: 文本块的ID
+
+        返回:
+        - 包含提取的实体信息的列表
+        """
+        # 使用语言模型预测实体信息
+        data = self.llm.predict(GET_ENTITY.format(text=text))
+        concepts = []  # 用于存储提取的实体信息
+
+        # 从预测结果中提取实体信息
+        for concept_html in get_text_inside_tag(data, "concept"):
+            concept = {}
+            concept["name"] = get_text_inside_tag(concept_html, "name")[0].strip()
+            concept["description"] = get_text_inside_tag(concept_html, "description")[
+                0
+            ].strip()
+            concept["chunks id"] = [chunk_id]
+            concept["entity id"] = compute_mdhash_id(
+                concept["description"], prefix="entity-"
+            )
+            concepts.append(concept)
+
+        return concepts
+```
+
+完成实体的抽取后，我们根据抽取到的实体信息，提示 LLM 根据这些实体进行三元组的抽取，抽取三元组的过程与抽取实体相当相似，我们只需要简单修改一下提示词与信息提取步骤即可
+
+抽取三元组的提示词如下：
+
+```python
+GET_TRIPLETS = """
+## Goal
+Identify and extract all the relationships between the given concepts from the provided text.
+Identify as many relationships between the concepts as possible.
+The relationship in the triple should accurately reflect the interaction or connection between the two concepts.
+
+## Guidelines:
+1. **Subject:** The first entity from the given entities.
+2. **Predicate:** The action or relationship linking the subject to the object.
+3. **Object:** The second entity from the given entities.
+
+## Example:
+1. Article :
+    "Gaussian Processes are used to model the objective function in Bayesian Optimization"
+   Given entities:
+   [{{"name": "Gaussian Processes", "entity id": "entity-1"}}, {{"name": "Bayesian Optimization", "entity id": "entity-2"}}]
+   Output:
+   <triplet><subject>Gaussian Processes</subject><subject_id>entity-1</subject_id><predicate>are used to model the objective function in</predicate><object>Bayesian Optimization</object><object_id>entity-2</object_id></triplet>
+
+2. Article :
+    "Hydrogen is a colorless, odorless, non-toxic gas and is the lightest and most abundant element in the universe. Oxygen is a gas that supports combustion and is widely present in the Earth's atmosphere. Water is a compound made up of hydrogen and oxygen, with the chemical formula H2O."
+    Given entities:
+    [{{"name": "Hydrogen", "entity id": "entity-3"}}, {{"name": "Oxygen", "entity id": "entity-4"}}, {{"name": "Water", "entity id": "entity-5"}}]
+    Output:
+    <triplet><subject>Hydrogen</subject><subject_id>entity-3</subject_id><predicate>is a component of</predicate><object>Water</object><object_id>entity-5</object_id></triplet>
+3. Article :
+    "John read a book on the weekend"
+    Given entities:
+    []
+    Output:
+    None
+
+## Format:
+For each identified triplet, provide:
+**the entity should just from "Given Entities"**
+<triplet><subject>[Entity]</subject><subject_id>[Entity ID]</subject_id><predicate>[The action or relationship]</predicate><object>[Entity]</object><object_id>[Entity ID]</object_id></triplet>
+
+## Given Entities:
+{entity}
+
+### Article:
+{text}
+
+## Additional Instructions:
+- Before giving your response, you should analyze and think about it sentence by sentence.
+- Both the subject and object must be selected from the given entities and cannot change their content.
+- If no relevant triplet involving both entities is found, no triplet should be extracted.
+- If there are similar concepts, please rewrite them into a form that suits our requirements.
+
+## Your response:
+"""
+```
+
+当大模型回复我们按照指定格式抽取的三元组后，与解析实体类似，我们使用正则表达式提取指定标签内的内容。
+
+```python
+def get_triplets(self, content, entity: list) -> List[Dict]:
+        """
+        从给定的内容中提取三元组（Triplet）信息，并返回包含这些三元组信息的列表。
+
+        参数:
+        - content: 输入的内容
+        - entity: 实体列表
+
+        返回:
+        - 包含提取的三元组信息的列表
+        """
         try:
-            # 从当前分块中提取实体，每个实体包含名称、描述、关联的分块ID以及唯一的实体ID
-            entities = self.get_entity(chunk_content, chunk_id=chunk_id)
-            all_entities.extend(entities)
-            # 从当前分块中提取三元组，每个三元组由主语（subject）、谓语（predicate）和宾语（object）组成，表示实体之间的关系
-            triplets = self.get_triplets(chunk_content, entities)
-            all_triplets.extend(triplets)
-        except:
-            print(
-                f"An error occurred while processing chunk '{chunk_id}'. SKIPPING..."
-            )
+            # 使用语言模型预测三元组信息
+            data = self.llm.predict(GET_TRIPLETS.format(text=content, entity=entity))
+            data = get_text_inside_tag(data, "triplet")
+        except Exception as e:
+            print(f"Error predicting triplets: {e}")
+            return []
 
-    print(
-        f"{len(all_entities)} entities and {len(all_triplets)} triplets have been extracted."
-    )
-    ```
-- 功能：遍历文档块以及从当前分块中提取实体和三元组，其中提取实体和三元组，均使用llm来完成。下面分析这代代码的实现步骤，再简单解释下实体和三元组的定义与结构。
-- 实现步骤：
-    1. 初始化存储容器；
-    2. 遍历文档块，遍历new_chunks字典，其中每一块有一个chunk_id和对应的内容chunk_content。
-    3. 提取实体和三元组：首先调用self.get_entity(chunk_conten, chunk_id= chunk_id)方法，从当前分块中提取实体，将提取到的实体追加到all_entities列表中；然后调用self.get_triplets(chunk_content, entities)方法，从当前分块中提取三元组，将提取到的三元组追加到all_triplets列表中。如果在处理过程中出现错误，打印错误信息并跳过该分块。
-    4. 打印提取的实体和三元组综述，便于检查和提取结果。
-- 实体的定义与结构
-    - 定义：实体是文档中提取的关键概念或对象，通常是名词或专有名词。
-    - 结构示意
-        ```python
-        {
-            "name": "Entity Name",  # 实体名称
-            "description": "Entity Description",  # 实体描述
-            "chunks id": ["chunk-1a2b3c"],  # 关联的文档块 ID
-            "entity id": "entity-123456"  # 实体的唯一标识符
-        }
-        ```
-- 三元组的定义与结构
-    - 定义：三元组是描述实体之间关系的结构，包含主语（subject）、谓语（predicate）和宾语（object）。
-    - 结构示意
-        ```python
-        {
-            "subject": "Subject Name",  # 主语名称
-            "subject_id": "entity-123456",  # 主语的唯一标识符
-            "predicate": "Predicate Name",  # 谓语（关系名称）
-            "object": "Object Name",  # 宾语名称
-            "object_id": "entity-654321"  # 宾语的唯一标识符
-        }
-        ```
+        res = []  # 用于存储提取的三元组信息
 
-- 实体（Entities）是图数据库中的节点，表示文档中的关键概念。三元组（Triplets）是+图数据库中的边，表示实体之间的关系，Neo4j中的节点与三元组关系如下所示：
+        # 从预测结果中提取三元组信息
+        for triplet_data in data:
+            try:
+                subject = get_text_inside_tag(triplet_data, "subject")[0]
+                subject_id = get_text_inside_tag(triplet_data, "subject_id")[0]
+                predicate = get_text_inside_tag(triplet_data, "predicate")[0]
+                object = get_text_inside_tag(triplet_data, "object")[0]
+                object_id = get_text_inside_tag(triplet_data, "object_id")[0]
+                res.append(
+                    {
+                        "subject": subject,
+                        "subject_id": subject_id,
+                        "predicate": predicate,
+                        "object": object,
+                        "object_id": object_id,
+                    }
+                )
+            except Exception as e:
+                print(f"Error extracting triplet: {e}")
+                continue
 
-<div align="center">
-    <img src="images/Learning-Algorithms%E8%8A%82%E7%82%B9%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF.png" width="800px">
-</div>
+        return res
+```
 
-###### 1.3.4 执行实体消歧和三元组更新。实体消歧有两种方法可以选择，默认将同名实体认为是同一实体
-- 对应代码
-    ```python
-    # ================ Entity Disambiguation ================
-    entity_names = list(set(entity["name"] for entity in all_entities))
+至此，我们就完成了三元组的抽取工作，迈出了坚实一步，接下来，我们需要将已经抽取的实体数据以及三元组数据导入至 neo4j 数据库中，不过，在此之前，我们还有必要进行一步实体消岐工作。
 
-    if use_llm_deambiguation:
-        entity_id_mapping = {}
-        for name in entity_names:
-            same_name_entities = [
-                entity for entity in all_entities if entity["name"] == name
-            ]
-            transform_text = self.llm.predict(
-                ENTITY_DISAMBIGUATION.format(same_name_entities)
-            )
-            entity_id_mapping.update(
-                get_text_inside_tag(transform_text, "transform")
-            )
-    else:
-        entity_id_mapping = {}
-        for entity in all_entities:
-            entity_name = entity["name"]
-            if entity_name not in entity_id_mapping:
-                entity_id_mapping[entity_name] = entity["entity id"]
+在实体、关系的抽取过程中，某一元素可能在多个文档中重复出现，因而会被多次检测并记录，产生多个实例。同时，同一实体可能在文档中按照不同的名称出现，在构建知识图谱的过程中，这些实例会被整合为图中的单个节点或边，并对其描述进行归纳与总结。
 
+一些同名的实体也不能直接进行合并，这些内容如果不加以处理，直接导入知识图谱的话可能会产生相当严重的错误，比如苹果公司与苹果（水果），这两种实体有可能在知识图谱中被整合为一个节点，因此我们需要进行实体消岐，来缓解这一问题。
+
+实体消岐可以分为两个思路，第一个即为在提取实体时，我们就要求大模型抽取的实体名称要尽可能的唯一，当三元组抽取结束后，我们也可以使用大模型来协助消岐，通过再次检查抽取的内容，来判断是否需要进行实体消岐。
+
+具体的做法为，我们检查相同名称的实体，使用大模型检查这些实体的具体内容，接着大模型给出需要被合并的实体名单，我们根据大模型的回复，整合对应的信息。
+
+实体消融使用的提示词如下：
+
+```python
+ENTITY_DISAMBIGUATION = """
+## Goal
+Given multiple entities with the same name, determine if they can be merged into a single entity. If merging is possible, provide the transformation from entity id to entity id.
+
+## Guidelines
+1. **Entities:** A list of entities with the same name.
+2. **Merge:** Determine if the entities can be merged into a single entity.
+3. **Transformation:** If merging is possible, provide the transformation from entity id to entity id.
+
+## Example
+1. Entities:
+   [
+       {"name": "Entity A", "entity id": "entity-1"},
+       {"name": "Entity A", "entity id": "entity-2"},
+       {"name": "Entity A", "entity id": "entity-3"}
+   ]
+
+Your response should be:
+
+<transformation>{"entity-2": "entity-1", "entity-3": "entity-1"}</transformation>
+
+
+2. Entities:
+   [
+       {"name": "Entity B", "entity id": "entity-4"},
+       {"name": "Entity C", "entity id": "entity-5"},
+       {"name": "Entity B", "entity id": "entity-6"}
+   ]
+
+Your response should be:
+
+<transformation>None</transformation>
+
+## Output Format
+Provide the following information:
+- Transformation: A dictionary mapping entity ids to the final entity id after merging.
+
+## Given Entities
+{entities}
+
+## Your response
+"""
+```
+
+如上大模型回复我们，告知我们哪些实体可以被相似的实体取代，例如实体 1 可以被实体 2 取代，那么大模型将回复 <transformation>{"entity-1": "entity-2"}</transformation>， 我们可以通过这个字典结构，将所有需要被取代的实体的 ID 更新为取代实体的 ID。
+
+```python
+entity_names = list(set(entity["name"] for entity in all_entities))
+
+if use_llm_deambiguation:
+    entity_id_mapping = {}
+    for name in entity_names:
+        same_name_entities = [
+            entity for entity in all_entities if entity["name"] == name
+        ]
+        transform_text = self.llm.predict(
+            ENTITY_DISAMBIGUATION.format(same_name_entities)
+        )
+        entity_id_mapping.update(
+            get_text_inside_tag(transform_text, "transform")
+        )
+else:
+    entity_id_mapping = {}
     for entity in all_entities:
-        entity["entity id"] = entity_id_mapping.get(
-            entity["name"], entity["entity id"]
+        entity_name = entity["name"]
+        if entity_name not in entity_id_mapping:
+            entity_id_mapping[entity_name] = entity["entity id"]
+
+for entity in all_entities:
+    entity["entity id"] = entity_id_mapping.get(
+        entity["name"], entity["entity id"]
+    )
+
+triplets_to_remove = [
+    triplet
+    for triplet in all_triplets
+    if entity_id_mapping.get(triplet["subject"], triplet["subject_id"]) is None
+    or entity_id_mapping.get(triplet["object"], triplet["object_id"]) is None
+]
+
+updated_triplets = [
+    {
+        **triplet,
+        "subject_id": entity_id_mapping.get(
+            triplet["subject"], triplet["subject_id"]
+        ),
+        "object_id": entity_id_mapping.get(
+            triplet["object"], triplet["object_id"]
+        ),
+    }
+    for triplet in all_triplets
+    if triplet not in triplets_to_remove
+]
+all_triplets = updated_triplets
+```
+
+完成实体消岐后，我们就可以开始合并同一实体的信息了，我们把三元组中的实体 ID 更新为消岐后的 ID，接着我们合并同一实体的描述信息，以及它们所属的文本块 ID 。
+
+```python
+entity_map = {}
+
+for entity in all_entities:
+    entity_id = entity["entity id"]
+    if entity_id not in entity_map:
+        entity_map[entity_id] = {
+            "name": entity["name"],
+            "description": entity["description"],
+            "chunks id": [],
+            "entity id": entity_id,
+        }
+    else:
+        entity_map[entity_id]["description"] += " " + entity["description"]
+
+    entity_map[entity_id]["chunks id"].extend(entity["chunks id"])
+```
+
+最终我们得到的实体信息如图所示，其中 embedding 信息与 community id 信息我们将在后续的内容中讲解。
+
+![entities](images/entities.png)
+
+至此我们已经完成了三元组导入前的所有前置工作，接下来我们就可以向 Neo4j 数据库中导入实体和三元组了。
+
+三元组的导入我们通过 Cypher 语句实现
+
+```python
+query = (
+        "MERGE (a:Entity {name: $subject_name, description: $subject_desc, chunks_id: $subject_chunks_id, entity_id: $subject_entity_id}) "
+        "MERGE (b:Entity {name: $object_name, description: $object_desc, chunks_id: $object_chunks_id, entity_id: $object_entity_id}) "
+        "MERGE (a)-[r:Relationship {name: $predicate}]->(b) "
+        "RETURN a, b, r"
+    )
+```
+
+上面的语句即为在 Neo4j 中创建实体 a 实体 b 以及它们的关系 r，我们把提取出的三元组信息导入这个 Cypher 语句中，接着，通过 neo4j 的 driver，我们可以在 neo4j 中执行这个语句，即可实现三元组的导入。
+
+```python
+def create_triplet(self, subject: dict, predicate, object: dict) -> None:
+    """
+    创建一个三元组（Triplet）并将其存储到Neo4j数据库中。
+
+    参数:
+    - subject: 主题实体的字典，包含名称、描述、块ID和实体ID
+    - predicate: 关系名称
+    - object: 对象实体的字典，包含名称、描述、块ID和实体ID
+
+    返回:
+    - 查询结果
+    """
+    # 定义Cypher查询语句，用于创建或合并实体节点和关系
+    query = (
+        "MERGE (a:Entity {name: $subject_name, description: $subject_desc, chunks_id: $subject_chunks_id, entity_id: $subject_entity_id}) "
+        "MERGE (b:Entity {name: $object_name, description: $object_desc, chunks_id: $object_chunks_id, entity_id: $object_entity_id}) "
+        "MERGE (a)-[r:Relationship {name: $predicate}]->(b) "
+        "RETURN a, b, r"
+    )
+
+    # 使用数据库会话执行查询
+    with self.driver.session() as session:
+        result = session.run(
+            query,
+            subject_name=subject["name"],
+            subject_desc=subject["description"],
+            subject_chunks_id=subject["chunks id"],
+            subject_entity_id=subject["entity id"],
+            object_name=object["name"],
+            object_desc=object["description"],
+            object_chunks_id=object["chunks id"],
+            object_entity_id=object["entity id"],
+            predicate=predicate,
         )
 
-    triplets_to_remove = [
-        triplet
-        for triplet in all_triplets
-        if entity_id_mapping.get(triplet["subject"], triplet["subject_id"]) is None
-        or entity_id_mapping.get(triplet["object"], triplet["object_id"]) is None
-    ]
+    return
 
-    updated_triplets = [
-        {
-            **triplet,
-            "subject_id": entity_id_mapping.get(
-                triplet["subject"], triplet["subject_id"]
-            ),
-            "object_id": entity_id_mapping.get(
-                triplet["object"], triplet["object_id"]
-            ),
-        }
-        for triplet in all_triplets
-        if triplet not in triplets_to_remove
-    ]
-    all_triplets = updated_triplets
-    ```
-- 对于实体消歧（Entity Disambiguation）部分
-    - 功能：
-        - 解决同名实体歧义的问题，确保每个实体都有唯一的entity_id。如果启用了LLM消歧（use_llm_deambiguation=True），则默认将同名实体视为同一实体；如果未启用LLM消歧，则默认将同名实体视为同一实体。本项目采用后者。
-    - 实现步骤：
-        1. 提取实体的名称存储到entity_names中；
-        2. 使用默认方法消歧义
-        3. 更新实体ID
-- 对于三元组更新（Triplet Update）部分
-    - 功能：
-        - 根据消歧后的实体ID更新三元组，并移除无效的三元组。
-    - 实现步骤：
-        1. 移除所有无效的三元组（如果三元组的主语或者宾语的实体ID无法在entity_id_mapping中找到，则将其标记为无效）；
-        2. 更新三元组（对于有效的三元组，更新其主语和宾语的实体ID）
-        3. 保存更新后的三元组（将更新后的三元组列表保存到all_triplets中）
-###### 1.3.5 合并实体和三元组
-- 对应代码
-    ```python
-    # ================ Merge Entities ================
-    entity_map = {}
+for triplet in all_triplets:
+    subject_id = triplet["subject_id"]
+    object_id = triplet["object_id"]
 
-    for entity in all_entities:
-        entity_id = entity["entity id"]
-        if entity_id not in entity_map:
-            entity_map[entity_id] = {
-                "name": entity["name"],
-                "description": entity["description"],
-                "chunks id": [],
-                "entity id": entity_id,
-            }
-        else:
-            entity_map[entity_id]["description"] += " " + entity["description"]
+    subject = entity_map.get(subject_id)
+    object = entity_map.get(object_id)
+    if subject and object:
+        self.create_triplet(subject, triplet["predicate"], object)
+```
 
-        entity_map[entity_id]["chunks id"].extend(entity["chunks id"])
-    ```
-- 功能：
-    - 将所有提取的实体（all_entities）按照其唯一标识符（entity_id）进行归并，确保同一个实体的描述和关联的文档块ID被整合到一起
-- 实现步骤：
-    - 使用一个字典entity_map，以entity_id作为键，存储每个实体的合并信息。如果某个实体entity_id已经存在于entity_map中，则将其描述和文档块ID合并到已有的实体中。
-###### 1.3.6 将合并的实体和三元组存储到Neo4j的图数据库中
-- 对应代码
-    ```python
-    # ================ Store Data in Neo4j ================
-    for triplet in all_triplets:
-        subject_id = triplet["subject_id"]
-        object_id = triplet["object_id"]
+导入后的图谱如图所示：
 
-        subject = entity_map.get(subject_id)
-        object = entity_map.get(object_id)
-        if subject and object:
-            self.create_triplet(subject, triplet["predicate"], object)
-    ```
-- 功能：将提取的三元组（triplets）存储到Neo4j图数据库中
-- 实现步骤：
-    1. 遍历all_triplets列表，逐个处理每个三元组
-    2. 根据三元组中的subject_id和object_id，从entity_map中获取对应的实体信息
-    3. 如果主语和宾语实体都存在，则调用self.create_triplet方法，将三元组存储到Neo4j中。其中的create_triplet方法能够通过Cypher查询语句将实体和关系插入到数据库中。
-###### 1.3.7 生成社区内容
+![graph](images/graph.png)
 
-基于上一步构建的知识图谱索引，可以使用多种社区检测算法对图进行划分，以识别其中强连接的节点集合（即社区）。在我们的处理流程中，我们采用 Leiden 社区检测算法以递归方式构建社区层级结构：首先在全图中识别出初始社区，然后在每个社区内继续执行子社区检测，直到无法进一步划分为止，形成叶级社区。
+完成导入后，我们就已经构建出了一个根据文档内容提取出的知识图谱，但是，当前这个图谱仅仅能处理一些针对一个或者多个实体的问题，面对全局性的问题，比如“小明家里有几口人”，当前的图谱并不能给出答案，因此，我们还需要进行社区聚类，将图谱中的节点聚类，以实现对全局性问题的处理。
 
-Leiden 算法主要包括以下三个阶段：
+### 社区聚类概览
 
+首先，我们来讨论一下全局性的查询，它们需要的信息都呈现为哪些特征？我们以“小明家里有几口人”为例，可以预见的是，我们需要召回一个以小明为中心，扩展 N 跳的子图，并且，很多全局性的查询都可以用类似的思路解决，区别仅在于 N 的大小。以一个更复杂的查询为例：“描述大乔和曹操的关系”，通过查询这两个实体附近的关系以及实体就可以回答对应的信息。因此，在 TinyGraphRAG 中我们通过聚类算法预先聚类这些实体与关系，形成社区，我们将使用社区信息作为回答全局问题时的参考，试想如果我们成功聚类了关于 “大乔与曹操” 的社区，那么，当用户询问“描述大乔和曹操的关系”时，我们就可以直接从社区中召回答案，而不需要进行复杂的图搜索。
 
-- 节点聚合： 在固定社区划分的前提下，尝试将每个节点移动到邻居节点所属社区，以提升总体模块度。
-- 社区细化： 对每个社区进行局部划分，确保每个社区子图中的所有节点之间是连通的，防止出现不连通的社区。
-- 图聚合： 构建新的超图，将每个社区作为一个超级节点，重复第一步，形成递归的社区层级结构。
+目前社区检测算法有很多种，在 TinyGraphRAG 中，我们选择使用分层的 Leiden 社区检测算法，以递归方式构建社区层级结构：首先在全图中识别出初始社区，然后在每个社区内继续执行子社区检测，直到无法进一步划分为止，形成叶级社区。
 
+分层 Leiden 算法流程主要包括以下三个阶段：
+
+(1) 节点聚合：在固定社区划分的前提下，尝试将每个节点移动到邻居节点所属社区，以提升总体模块度。
+
+(2) 社区细化：对每个社区进行局部划分，确保每个社区子图中的所有节点之间是连通的，防止出现不连通的社区。
+
+(3) 图聚合：构建新的超图，将每个社区作为一个超级节点，重复第一步，形成递归的社区层级结构。
 
 模块度用于衡量当前社区划分相较于随机划分的“好坏”，定义如下：
 
 $$
-Q = \frac{1}{2m} \sum_{i,j} \left[ A_{ij} - \frac{k_i k_j}{2m} \right] \delta(c_i, c_j)
+Q = \frac{1}{2m} \sum_{i,j} \left[ A_{ij} - \gamma \frac{k_i k_j}{2m} \right] \delta(c_i, c_j)
 $$
 
-其中:
+其中，$ A\_{ij} $表示节点 $ i $ 与节点 $ j $ 之间的边的权重；$ \gamma $为分辨率参数，控制社区规模，默认为 1。
 
-$A_{ij}$：节点 $i$ 与节点 $j$ 之间的边的权重；
-$k_i$：节点 $i$ 的度（边的总权重）；
-$m$：图中所有边的总权重的一半（即 $m = \frac{1}{2} \sum_{i,j} A_{ij}$）；
-$c_i$：节点 $i$ 所属的社区编号；
-$\delta(c_i, c_j)$：当 $i$ 与 $j$ 属于同一社区时为 1，否则为 0。
+$ k*i $表示节点 $ i $ 的度（边的总权重）；$ m $即图中所有边的总权重的一半（即 $ m = \frac{1}{2} \sum*{i,j} A\_{ij} $）；$ c_i $为节点 $ i $ 所属的社区编号；$ \delta(c_i, c_j) $表示当 $ i $ 与 $ j $ 属于同一社区时为 1，否则为 0。
 
-在社区划分完成后，我们为社区层级结构中的每一个社区生成类报告形式的摘要。这一过程支持对大规模数据集的结构性理解，提供了不依赖具体查询的语义概览，帮助用户快速掌握语料库中各主题的全貌。
+在本文中，使用 Neo4j 的 GDS 库提供的分层 Leiden 算法包对提取出的知识图谱进行社区检测，得到包含节点和关系的社区信息。在社区检测过程中，模块度中的分辨率参数 $ \gamma $ 并非固定不变。具体来说，在越低的层级中，$ \gamma $ 值会逐渐减小，以此鼓励算法在当前社区内进一步划分出更多的子社区，从而实现更细致的社区结构划分。
 
-例如，用户可以浏览某一层级的社区摘要以确定感兴趣的主题，并进一步阅读下级社区报告，获取更细粒度的信息。尽管这些摘要本身具有独立意义，但我们主要关注其作为图索引机制的一部分，在响应全局性查询时的效用。
+在社区划分完成后，为社区层级结构中的每一个社区生成类报告形式的摘要。这一过程支持对大规模数据集的结构性理解，提供了不依赖具体查询的语义概览，帮助用户快速掌握语料库中各主题的全貌。
 
-摘要的生成采用模板方法，逐步将图中节点、边及其声明的摘要填充到社区摘要模板中。较低层级的社区摘要将作为上层社区摘要生成的基础。
+例如，用户可以浏览某一层级的社区摘要以确定感兴趣的主题，并进一步阅读下级社区报告，获取更细粒度的信息。尽管这些摘要本身具有独立意义，但本文主要关注其作为图索引机制的一部分，在响应全局性查询时的效用。
 
- 对于叶级社区，从图中提取的节点和边的摘要被按优先级排序加入到 LLM 上下文窗口中。排序标准是：依据边的源节点和目标节点的整体度量（即显著性）降序排列。依次添加源节点描述、目标节点描述、边的描述。
+摘要的生成采用模板方法，逐步将图中节点、边及其声明的摘要填充到社区摘要模板中。较低层级的社区摘要将作为上层社区摘要生成的基础。具体步骤如下：
 
-对于高级社区，若所有元素摘要在上下文窗口的 token 限制内可容纳，则按叶级社区的方法汇总所有元素摘要；否则，将子社区按摘要的 token 数量降序排序，逐步用更短的子社区摘要替换较长的元素摘要，直到整体摘要符合上下文窗口限制。
+(1) 对于叶级社区，从图中提取的节点和边的摘要被按优先级排序加入到 LLM 上下文窗口中。排序标准是：依据边的源节点和目标节点的整体度量（即显著性）降序排列。依次添加源节点描述、目标节点描述、边的描述。
 
+(2) 对于高级社区，若所有元素摘要在上下文窗口的 token 限制内可容纳，则按叶级社区的方法汇总所有元素摘要；否则，将子社区按摘要的 token 数量降序排序，逐步用更短的子社区摘要替换较长的元素摘要，直到整体摘要符合上下文窗口限制。
 
+理论描述到此结束，接下来我们来一步步实现上述功能。
 
-- 对应代码    
-    ```python
-    # ================ communities ================
-    self.gen_community()
-    self.generate_community_report()
+### 社区检测实现
+
+在了解完我们使用的社区检测算法后，实际上实现相当简单，由于 neo4j 提供了 GDS 库，我们只需要调用 GDS 库中的分层 Leiden 算法包即可。
+
+社区检测的算法如下：
+
+```python
+def detect_communities(self) -> None:
+    query = """
+    CALL gds.graph.project(
+        'graph_help',
+        ['Entity'],
+        {
+            Relationship: {
+                orientation: 'UNDIRECTED'
+            }
+        }
+    )
+    """
+    with self.driver.session() as session:
+        result = session.run(query)
+
+    query = """
+    CALL gds.leiden.write('graph_help', {
+        writeProperty: 'communityIds',
+        includeIntermediateCommunities: True,
+        maxLevels: 10,
+        tolerance: 0.0001,
+        gamma: 1.0,
+        theta: 0.01
+    })
+    YIELD communityCount, modularity, modularities
+    """
+    with self.driver.session() as session:
+        result = session.run(query)
+        for record in result:
+            print(
+                f"社区数量: {record['communityCount']}, 模块度: {record['modularity']}"
+            )
+        session.run("CALL gds.graph.drop('graph_help')")
+```
+
+完成社区检测后，我们会为每个节点增加它们所属的社区属性，很明显，同一个节点有可能属于不同社区，所以这里的 communityIds 实际上是一个列表。
+
+社区检测完成后，我们为社区生成一个 schema，这个 schema 包含了社区的层次结构、社区内包含的节点、边等信息。作为一个单独的结构存储社区信息。
+
+```python
+def gen_community_schema(self) -> dict[str, dict]:
+    results = defaultdict(
+        lambda: dict(
+            level=None,
+            title=None,
+            edges=set(),
+            nodes=set(),
+            chunk_ids=set(),
+            sub_communities=[],
+        )
+    )
+
+    with self.driver.session() as session:
+        # Fetch community data
+        result = session.run(
+            f"""
+            MATCH (n:Entity)
+            WITH n, n.communityIds AS communityIds, [(n)-[]-(m:Entity) | m.entity_id] AS connected_nodes
+            RETURN n.entity_id AS node_id,
+                    communityIds AS cluster_key,
+                    connected_nodes
+            """
+        )
+
+        max_num_ids = 0
+        for record in result:
+            for index, c_id in enumerate(record["cluster_key"]):
+                node_id = str(record["node_id"])
+                level = index
+                cluster_key = str(c_id)
+                connected_nodes = record["connected_nodes"]
+
+                results[cluster_key]["level"] = level
+                results[cluster_key]["title"] = f"Cluster {cluster_key}"
+                results[cluster_key]["nodes"].add(node_id)
+                results[cluster_key]["edges"].update(
+                    [
+                        tuple(sorted([node_id, str(connected)]))
+                        for connected in connected_nodes
+                        if connected != node_id
+                    ]
+                )
+        for k, v in results.items():
+            v["edges"] = [list(e) for e in v["edges"]]
+            v["nodes"] = list(v["nodes"])
+            v["chunk_ids"] = list(v["chunk_ids"])
+        for cluster in results.values():
+            cluster["sub_communities"] = [
+                sub_key
+                for sub_key, sub_cluster in results.items()
+                if sub_cluster["level"] > cluster["level"]
+                and set(sub_cluster["nodes"]).issubset(set(cluster["nodes"]))
+            ]
+
+    return dict(results)
+```
+
+### 社区摘要生成
+
+完成社区聚类后，接下来我们就是根据社区内节点的内容生成该社区的摘要，反馈这个社区内的核心内容，这一步相当易懂，我们只需要使用 LLM 读取社区内节点与关系的描述，最后总结即可，但是需要注意的是，本文在处理摘要时使用了比较直接的思路，即每个社区的信息都导入 LLM 让其生成摘要。但实际上更优的做法是我们在撰写社区摘要时，需要从下往上生成，因为过大的社区可能造成超过 LLM 的 token 限制，而从下而上的处理方式使得我们可以跳过一些已经生成过摘要的子社区，直接将子社区的摘要作为一部分节点的描述，从而最大程度减小 token 消耗。
+
+````python
+def generate_community_report(self):
+    communities_schema = self.read_community_schema()
+    for community_key, community in tqdm(
+        communities_schema.items(), desc="generating community report"
+    ):
+        community["report"] = self.gen_single_community_report(community)
+    with open(self.community_path, "w", encoding="utf-8") as file:
+        json.dump(communities_schema, file, indent=4)
+    print("All community report has been generated.")
+
+def gen_single_community_report(self, community: dict):
+    nodes = community["nodes"]
+    edges = community["edges"]
+    nodes_describe = []
+    edges_describe = []
+    for i in nodes:
+        node = self.get_node_by_id(i)
+        nodes_describe.append({"name": node["name"], "desc": node["description"]})
+    for i in edges:
+        edge = self.get_edges_by_id(i[0], i[1])
+        edges_describe.append(
+            {"source": edge["src"], "target": edge["tar"], "desc": edge["r"]}
+        )
+    nodes_csv = "entity,description\n"
+    for node in nodes_describe:
+        nodes_csv += f"{node['name']},{node['desc']}\n"
+    edges_csv = "source,target,description\n"
+    for edge in edges_describe:
+        edges_csv += f"{edge['source']},{edge['target']},{edge['desc']}\n"
+    data = f"""
+    Text:
+    -----Entities-----
+    ```csv
+    {nodes_csv}
     ```
-- 功能：
-    - 生成社区：通过图算法（本项目为 Leiden 算法）检测图中的社区结构。
-    - 生成社区报告：借助大语言模型为每个社区生成详细的报告，描述社区中的实体和关系。
-- 实现步骤：
-    1. 对于生成社区功能，调用 self.gen_community() 方法：
-        - 使用 Neo4j 的图算法（如 gds.leiden.write）检测社区。
-        - 生成社区架构（community schema），包括社区的层级、节点、边等信息。
-        - 将社区架构存储到 community.json 文件中。
-    2. 对于生成社区报告功能，调用 self.generate_community_report() 方法：
-        - 遍历每个社区，生成包含实体和关系的报告。
-        - 报告通过大语言模型（LLM）生成，描述社区的结构和内容。
-
-###### 1.3.8 生成嵌入式向量
-- 对应代码
-    ```python
-    # ================ embedding ================
-    self.add_embedding_for_graph()
-    self.add_loaded_documents(filepath)
-    print(f"doc '{filepath}' has been loaded.")
+    -----Relationships-----
+    ```csv
+    {edges_csv}
     ```
-- 功能：
-    - 为图数据库中的每个实体节点生成嵌入向量（embedding），用于计算相似度（本项目采用余弦相似度）和查询。
-    - 将处理过的文档路径记录到缓存文件中，避免重复处理。
-- 实现步骤：
-    1. 生成嵌入：调用 self.add_embedding_for_graph() 方法：遍历图数据库中的每个实体节点；使用嵌入模型（self.embedding）计算节点描述的嵌入向量；将嵌入向量存储到节点的 embedding 属性中。
-    2. 记录文档路径：调用 self.add_loaded_documents(filepath) 方法：将当前文路径添加到缓存文件中，避免重复加载。
-- 最终生成的图数据信息如下所示：
-  
-<div align="center">
-    <img src="images/图数据库示例.png" width="800px">
-</div>
-  
-###### 1.3.9 验证下数据库连接是否正常（当然，此步也可省略）
-- 对应代码
-    ```python
-    with graph.driver.session() as session:
-        result = session.run("MATCH (n) RETURN count(n) as count")
-        count = result.single()["count"]
-        print(f"数据库连接正常，节点数量: {count}")
-    ```
-#### 2. 图检索优化
-##### 2.1 两种图检索方法
--  按照Tiny-Graphrag demo代码的执行过程，图检索优化过程有两种：分别为Tiny-Graph类中`local_query`方法和`global_query`方法。
-  - 全局查询和局部查询的特点如下表所示：
+    """
+    prompt = GEN_COMMUNITY_REPORT.format(input_text=data)
+    report = self.llm.predict(prompt)
+    return report
+````
 
-| 查询类型 | 特点 | 适用场景 |
-|----------|------|----------|
-| 全局查询（global_query） | • 基于社区层级评分<br>• 筛选候选社区<br>• 返回排序列表 | • 高层次理解<br>• 全局视角分析 |
-| 局部查询（local_query） | • 基于直接关联上下文<br>• 提取精确实体/关系<br>• 返回多部分结果 | • 精确定位<br>• 深度分析 |
-- 下面依次分析下`local_query`方法和`global_query`方法的具体实现过程。
-##### 2.2 local_query方法
+我们读取每个社区内节点与边的描述，然后将他们整理之后导入 LLM 中，让其生成社区摘要，社区摘要内容主要包括社区名称，社区总结，以及社区内需要关注的要点信息，经过如上处理之后，我们就得到了聚类之后社区内的主要信息都是什么。我们使用的 prompt 如下：
+
+````python
+GEN_COMMUNITY_REPORT = """
+## Role
+You are an AI assistant that helps a human analyst to perform general information discovery.
+Information discovery is the process of identifying and assessing relevant information associated with certain entities (e.g., organizations and individuals) within a network.
+
+## Goal
+Write a comprehensive report of a community.
+Given a list of entities that belong to the community as well as their relationships and optional associated claims. The report will be used to inform decision-makers about information associated with the community and their potential impact.
+The content of this report includes an overview of the community's key entities, their legal compliance, technical capabilities, reputation, and noteworthy claims.
+
+## Report Structure
+
+The report should include the following sections:
+
+- TITLE: community's name that represents its key entities - title should be short but specific. When possible, include representative named entities in the title.
+- SUMMARY: An executive summary of the community's overall structure, how its entities are related to each other, and significant information associated with its entities.
+- DETAILED FINDINGS: A list of 5-10 key insights about the community. Each insight should have a short summary followed by multiple paragraphs of explanatory text grounded according to the grounding rules below. Be comprehensive.
+
+Return output as a well-formed JSON-formatted string with the following format:
+{{
+"title": <report_title>,
+"summary": <executive_summary>,
+"findings": [
+{{
+"summary":<insight_1_summary>,
+"explanation": <insight_1_explanation>
+}},
+{{
+"summary":<insight_2_summary>,
+"explanation": <insight_2_explanation>
+}}
+...
+]
+}}
+
+## Grounding Rules
+Do not include information where the supporting evidence for it is not provided.
+
+## Example Input
+-----------
+Text:
+
+
+Entities:
+
+```csv
+entity,description
+VERDANT OASIS PLAZA,Verdant Oasis Plaza is the location of the Unity March
+HARMONY ASSEMBLY,Harmony Assembly is an organization that is holding a march at Verdant Oasis Plaza
+\```
+
+Relationships:
+
+```csv
+source,target,description
+VERDANT OASIS PLAZA,UNITY MARCH,Verdant Oasis Plaza is the location of the Unity March
+VERDANT OASIS PLAZA,HARMONY ASSEMBLY,Harmony Assembly is holding a march at Verdant Oasis Plaza
+VERDANT OASIS PLAZA,UNITY MARCH,The Unity March is taking place at Verdant Oasis Plaza
+VERDANT OASIS PLAZA,TRIBUNE SPOTLIGHT,Tribune Spotlight is reporting on the Unity march taking place at Verdant Oasis Plaza
+VERDANT OASIS PLAZA,BAILEY ASADI,Bailey Asadi is speaking at Verdant Oasis Plaza about the march
+HARMONY ASSEMBLY,UNITY MARCH,Harmony Assembly is organizing the Unity March
+\```
+
+\```
+Output:
+{{
+"title": "Verdant Oasis Plaza and Unity March",
+"summary": "The community revolves around the Verdant Oasis Plaza, which is the location of the Unity March. The plaza has relationships with the Harmony Assembly, Unity March, and Tribune Spotlight, all of which are associated with the march event.",
+"findings": [
+{{
+"summary": "Verdant Oasis Plaza as the central location",
+"explanation": "Verdant Oasis Plaza is the central entity in this community, serving as the location for the Unity March. This plaza is the common link between all other entities, suggesting its significance in the community. The plaza's association with the march could potentially lead to issues such as public disorder or conflict, depending on the nature of the march and the reactions it provokes."
+}},
+{{
+"summary": "Harmony Assembly's role in the community",
+"explanation": "Harmony Assembly is another key entity in this community, being the organizer of the march at Verdant Oasis Plaza. The nature of Harmony Assembly and its march could be a potential source of threat, depending on their objectives and the reactions they provoke. The relationship between Harmony Assembly and the plaza is crucial in understanding the dynamics of this community."
+}},
+{{
+"summary": "Unity March as a significant event",
+"explanation": "The Unity March is a significant event taking place at Verdant Oasis Plaza. This event is a key factor in the community's dynamics and could be a potential source of threat, depending on the nature of the march and the reactions it provokes. The relationship between the march and the plaza is crucial in understanding the dynamics of this community."
+}},
+{{
+"summary": "Role of Tribune Spotlight",
+"explanation": "Tribune Spotlight is reporting on the Unity March taking place in Verdant Oasis Plaza. This suggests that the event has attracted media attention, which could amplify its impact on the community. The role of Tribune Spotlight could be significant in shaping public perception of the event and the entities involved."
+}}
+]
+}}
+
+## Real Data
+Use the following text for your answer. Do not make anything up in your answer.
+
+Text:
+
+{input_text}
+
+The report should include the following sections:
+
+- TITLE: community's name that represents its key entities - title should be short but specific. When possible, include representative named entities in the title.
+- SUMMARY: An executive summary of the community's overall structure, how its entities are related to each other, and significant information associated with its entities.
+- DETAILED FINDINGS: A list of 5-10 key insights about the community. Each insight should have a short summary followed by multiple paragraphs of explanatory text grounded according to the grounding rules below. Be comprehensive.
+
+Return output as a well-formed JSON-formatted string with the following format:
+{{
+"title": <report_title>,
+"summary": <executive_summary>,
+"rating": <impact_severity_rating>,
+"rating_explanation": <rating_explanation>,
+"findings": [
+{{
+"summary":<insight_1_summary>,
+"explanation": <insight_1_explanation>
+}},
+{{
+"summary":<insight_2_summary>,
+"explanation": <insight_2_explanation>
+}}
+...
+]
+}}
+
+## Grounding Rules
+Do not include information where the supporting evidence for it is not provided.
+
+Output:
+"""
+````
+
+至此我们就已经完成了社区部分的工作，接下来，我们将准备检索算法部分。
+
+### 节点嵌入生成
+
+目前得到的图，我们还无法直接用于检索，因为我们没有为图中的任何组件生成嵌入，嵌入是检索算法的核心之一，我们需要把原本的文本信息转化为向量，这样我们就可以使用向量相似度来衡量文本之间的相似度，帮助我们判断哪些信息对于回复用户信息最有帮助。
+
+嵌入的生成实际上相当简单，我们只需要调用 zhipuai 提供的 embedding 模型 api 即可，具体的实现我们在上文中已经提及。
+
+我们通过遍历图中的所有节点，然后为每个节点生成嵌入，最后将嵌入存储在节点的 embedding 属性中。
+
+```python
+ def add_embedding_for_graph(self):
+    query = """
+    MATCH (n)
+    RETURN n
+    """
+    with self.driver.session() as session:
+        result = session.run(query)
+        for record in result:
+            node = record["n"]
+            description = node["description"]
+            id = node["entity_id"]
+            embedding = self.embedding.get_emb(description)
+            # 更新节点，添加新的 embedding 属性
+            update_query = """
+            MATCH (n {entity_id: $id})
+            SET n.embedding = $embedding
+            """
+            session.run(update_query, id=id, embedding=embedding)
+```
+
+### 检索算法概览
+
+局部查询算法流程图如下图所示
+
+![local](images/local.png)
 
 局部查询方法主要用于回答那些聚焦于单一或少数几个实体的问题，比如“孙悟空的生平”或“矢车菊的治疗特性”。这种方法通过一系列步骤，从知识图谱和原始语料中提取与查询密切相关的信息，以构建精准的上下文，并最终生成高质量的回答。
 
-首先，系统会将用户的查询转换为一个向量表示，用于捕捉其语义含义。接着，它会在知识图谱中为每个实体节点也生成相应的向量表示，然后通过计算它们与查询向量之间的相似度，筛选出那些与查询密切相关的实体。如果它们之间的相似度超过一个设定的阈值，就会被认为是“相关实体”。
+系统首先将用户查询转化为向量，捕捉其语义含义。接着，计算知识图谱中实体节点向量与查询向量的相似度，筛选出相似度超过阈值的相关实体。之后，系统提取这些实体的邻居节点和边，在原始文本中查找相关内容片段。最终，将相关实体、邻居节点和文本片段组合成局部上下文窗口，输入 LLM 生成回答。
 
-找到这些关键实体之后，系统会进一步扩展它们的上下文信息，包括提取它们在知识图谱中直接连接的邻居节点和边，以补充相关的结构性信息。同时，系统还会在原始文本语料中查找与这些实体强相关的内容片段，为后续生成提供更多语义背景。
+全局查询算法流程图如下图所示
 
-最后，这些相关实体、邻居节点以及对应的文本片段会被组合成一个紧凑的局部上下文窗口，这个窗口会被输入到 LLM 中，用来生成针对用户问题的具体回答。
-
-- 在Tiny_Graphrag_test.ipynb中，执行局部查询测试时，使用的是local_query方法
-    - 具体代码为：`local_res = graph.local_query("what is dl?")` 
-    - 其中调用的方法`local_query("what is dl?")`，将"what is dl?"传递给`local_query()`方法，以下是`local_query()`方法的代码内容和代码解读
-- 代码内容
-    ```python
-    def local_query(self, query):
-        context = self.build_local_query_context(query) # 分别包括社区、实体、关系、文档块这四部分
-        prompt = LOCAL_QUERY.format(query=query, context=context) # 需要的参数context以及query都在该方法内得到了
-        response = self.llm.predict(prompt)
-        return response
-    ```
-- 代码解读
-    - 执行`context = self.build_local_query_context(query)`后，根据用户问题（本项目中是"what is dl?"）得到的包括社区、实体、关系、文档块的这四部分内容的上下文（context）。得到上下文的具体方法为：`build_local_query_context(self, query)`，该方法内的代码执行顺序是：
-    1. 获得输入文本的嵌入向量。对应代码为：`query_emb = self.embedding.get_emb(query)` 
-    2. 获得前k个最相似的实体，相似判断的依据是余弦相似度。对应代码为：`topk_similar_entities_context = self.get_topk_similar_entities(query_emb)`
-    3. 获得前k个最相似的社区，依据的方法是：
-        - 利用上面得到的最相似实体；
-        - 只要包含上述的任意topk节点，就认为是相似社区（社区：community，由相互关联的节点组成的集合）。对应代码为：
-            ```python
-            topk_similar_communities_context = self.get_communities(
-                topk_similar_entities_context
-            )
-            ```
-    4. 获得前k个最相似的关系，依据的方法是：在`get_relations`方法中调用`get_node_edgs`方法，获取该实体的所有关系边，认为这些边就是similar relation。对应代码为：
-        ```python
-        topk_similar_relations_context = self.get_relations(
-        topk_similar_entities_context, query
-        )
-        ```
-    5. 获得前k个最相似的文档块，依据是方法是：在`get_chunks`方法中调用`get_node_chunks`方法，获取该实体关联的文档块，认为这些文档块就是similar chunks。对应代码为：
-        ```python
-        topk_similar_chunks_context = self.get_chunks(
-        topk_similar_entities_context, query
-        )
-        ```
-    6. `build_local_query_context()`方法最终返回的是一个多行字符串，包括: 
-        - Reports：社区报告；
-        - Entities：与查询最相似的实体；
-        - Relationships：这些实体之间的关系；
-        - Sources：这些实体关联的文档块。对应的代码为：
-            ```python
-                return f"""
-                -----Reports-----
-                ```csv
-                {topk_similar_communities_context}
-                ```
-                -----Entities-----
-                ```csv
-                {topk_similar_entities_context}
-                ```
-                -----Relationships-----
-                ```csv
-                {topk_similar_relations_context}
-                ```
-                -----Sources-----
-                ```csv
-                {topk_similar_chunks_context}
-                ```
-                """
-            ```
-    - 之后的`prompt = LOCAL_QUERY.format(query=query, context=context)`可以理解为根据刚刚生成的context作为上下文，生成prompt为大模型使用。
-    -  最后 ，`response = self.llm.predict(prompt)`是将上文得到的prompt传输给大模型，从而让大模型做推理和回答，然后该方法返回到`response（return response）`作为大模型的回答结果。
-###### 2.3 global_query方法
+![global](images/global.png)
 
 全局查询方法适用于更复杂的问题，尤其是那些需要跨越多个知识图谱社区、结构性较强的查询，比如“曹操与大乔之间的联系”。这种类型的问题通常难以通过关注单一实体来解决，因此需要更宏观的视角和层级化的信息整合。
 
@@ -581,48 +1066,261 @@ $\delta(c_i, c_j)$：当 $i$ 与 $j$ 属于同一社区时为 1，否则为 0。
 
 最后，这个上下文连同原始问题一起被输入到语言模型中，生成最终的答案。通过这种方式，全局查询不仅能覆盖广泛的实体与关系，还能整合跨社区的背景信息，提供更深入、综合的回答。
 
+### 局部查询算法实现
 
--  在`Tiny_Graphrag_test.ipynb`中，执行全局查询测试时，使用的是`global_query`方法
-      - 具体代码为：`global_res = graph.global_query("what is dl?")`
-      - 其中调用的方法`global_query("what is dl?")`，将"what is dl?"传递给`global_query()`方法，以下是`global_query()`方法的代码内容和代码解读
-- 代码内容：
-    ```python
-    def global_query(self, query, level=1):
-        context = self.build_global_query_context(query, level) # 得到的是一个列表，包含社区的描述和分数
-        prompt = GLOBAL_QUERY.format(query=query, context=context)# 将得到的context传入到prompt中
-        response = self.llm.predict(prompt)# 将prompt传入到llm中，得到最终的结果，也就是将包含描述和分数的列表传入到llm中
-        return response
-    ```
-- 代码解读：
-- 运行`context = self.build_global_query_context(query, level)`时，会根据用户问题（本项目中是“what is dl?"）得到的包含社区描述和分数的上下文（context）。对应代码为：`context = self.build_global_query_context(query, level)`，该方法内的代码执行顺序是：
-    1. 设定空的候选社区（字典）以及空的社区评分列表（列表），并筛选符合层级要求的社区。对应代码为：
-        ```python
-        communities_schema = self.read_community_schema()
-        candidate_community = {} # 候选社区 字典
-        points = [] # 社区评分列表 列表
-        # 筛选符合层级要求的社区
-        for communityid, community_info in communities_schema.items():
-            if community_info["level"] < level:
-                candidate_community.update({communityid: community_info})
-        ```
-    2. 计算候选的社区的评分，通过调用`map_community_points`函数，结合社区报告和大语言模型的能力，为每个候选社区生成与查询内容（如 "What is DL?"）相关程度的评分。对应的代码为：
-        ```python
-        for communityid, community_info in candidate_community.items():
+如前文中讨论所言，首先，我们需要将用户的查询转化为向量形式
+
+```python
+query_emb = self.embedding.get_emb(query)
+```
+
+接着，我们就需要查询与用户查询相似度最高的实体，我们遍历图中的所有节点，计算它们与用户查询的相似度，然后返回相似度最高的 k 个节点。这里实际上 neo4j 提供了更简单的实现办法，笔者的写法其实有些笨比。感兴趣的读者们可以自行查阅实现。
+
+```python
+topk_similar_entities_context = self.get_topk_similar_entities(query_emb)
+
+def get_topk_similar_entities(self, input_emb, k=1) -> List[Node]:
+    res = []
+    query = """
+    MATCH (n)
+    RETURN n
+    """
+    with self.driver.session() as session:
+        result = session.run(query)
+    for record in result:
+        node = record["n"]
+        if node["embedding"] is not None:
+            similarity = cosine_similarity(input_emb, node["embedding"])
+            node = Node(
+                name=node["name"],
+                desc=node["description"],
+                chunks_id=node["chunks_id"],
+                entity_id=node["entity_id"],
+                similarity=similarity,
+            )
+            res.append(node)
+    return sorted(res, key=lambda x: x.similarity, reverse=True)[:k]
+```
+
+获取这些节点后，我们将获取这些节点相连的社区，关系，文本块信息，用于回复用户的原始问题
+
+```python
+
+topk_similar_communities_context = self.get_communities(
+    topk_similar_entities_context
+)
+topk_similar_relations_context = self.get_relations(
+    topk_similar_entities_context, query
+)
+topk_similar_chunks_context = self.get_chunks(
+    topk_similar_entities_context, query
+)
+
+def get_communities(self, nodes: List[Node]):
+    communities_schema = self.read_community_schema()
+    res = []
+    nodes_ids = [i.entity_id for i in nodes]
+    for community_id, community_info in communities_schema.items():
+        if set(nodes_ids) & set(community_info["nodes"]):
+            res.append(
+                {
+                    "community_id": community_id,
+                    "community_info": community_info["report"],
+                }
+            )
+    return res
+
+def get_relations(self, nodes: List, input_emb):
+    res = []
+    for i in nodes:
+        res.append(self.get_node_edgs(i))
+    return res
+
+def get_chunks(self, nodes, input_emb):
+    chunks = []
+    for i in nodes:
+        chunks.append(self.get_node_chunks(i))
+    return chunks
+```
+
+获取完成后，我们整理上述信息，将其输入至 LLM 中得到回复
+
+````python
+return f"""
+    -----Reports-----
+    ```csv
+    {topk_similar_communities_context}
+    \```
+    -----Entities-----
+    ```csv
+    {topk_similar_entities_context}
+    \```
+    -----Relationships-----
+    ```csv
+    {topk_similar_relations_context}
+    \```
+    -----Sources-----
+    ```csv
+    {topk_similar_chunks_context}
+    \```
+    """
+
+def local_query(self, query):
+    context = self.build_local_query_context(query)
+    prompt = LOCAL_QUERY.format(query=query, context=context)
+    response = self.llm.predict(prompt)
+    return response
+
+LOCAL_QUERY = """
+## User Query
+{query}
+## Context
+{context}
+## Task
+Based on given context, please provide a response to the user query.
+## Your Response
+"""
+````
+
+至此，我们就已经实现了局部查询算法。
+
+### 全局查询算法实现
+
+与局部查询相同，首先，我们需要将用户的查询转化为向量形式
+
+```python
+query_emb = self.embedding.get_emb(query)
+```
+
+由于不同等级的社区代表着不同大的主题，我们在全局查询前往往需要先确定查询的范围，如果涉及超大的社区，那我们必须有限从大社区开始，因此全局查询中存在参数 level， 用以指定查询的范围，不符合指定 level 的社区将被过滤掉。
+
+```python
+def build_global_query_context(self, query, level=1):
+    communities_schema = self.read_community_schema()
+    candidate_community = {}
+    points = []
+    for communityid, community_info in communities_schema.items():
+        if community_info["level"] < level:
+            candidate_community.update({communityid: community_info})
+    for communityid, community_info in candidate_community.items():
         points.extend(self.map_community_points(community_info["report"], query))
-        ```
-    3. 按照评分降序排序，得到包含描述和分数的列表。描述是社区的描述，分数是查询的相关性得分。对应代码为：
-        ```python
-        points = sorted(points, key=lambda x: x[-1], reverse=True)
-        return points # 得到包含描述和分数的列表，描述是社区的描述，分数是查询的相关性得分
-        ```
-    4. 之后的`prompt = GLOBAL_QUERY.format(query=query, context=context)`可以理解为根据刚刚生成的context作为上下文，生成prompt给大模型使用。
-    5. 最后，`response=self.llm.predict(prompt)`将上文得到的prompt传输给大模型。`return response`作为大模型的回答结果。
-##### 2.4 生成增强
-1. 通俗来讲就是：将得到的上下文输入给大模型，基于此上下文，大模型作推理和回答
-2. 在本项目代码中，`local_query`方法和`global_query`方法的将各自得到的上下文传输给大模型将是生成增强的过程。
-  - 局部查询和全局查询成功运行的示例：
+    points = sorted(points, key=lambda x: x[-1], reverse=True)
+    return points
+```
 
-<div align="center">
-  <img src="images/运行结果.png" width="1000">
-</div>
+完成社区过滤后，我们就需要对社区内的信息进行进一步处理，由于社区内部信息众多，其中有可能存在有利信息，也有可能存在有害信息，因此直接召回社区摘要是不明智的，我们选择将社区摘要信息通过 LLM 筛选出与查询相关的内容以及它们的贡献度，最后我们按照贡献度的大小，返回这些内容，贡献度的判断以及要点的提取都可以通过 LLM 完成。
+
+```python
+def map_community_points(self, community_info, query):
+    points_html = self.llm.predict(
+        GLOBAL_MAP_POINTS.format(context_data=community_info, query=query)
+    )
+    points = get_text_inside_tag(points_html, "point")
+    res = []
+    for point in points:
+        try:
+            score = get_text_inside_tag(point, "score")[0]
+            desc = get_text_inside_tag(point, "description")[0]
+            res.append((desc, score))
+        except:
+            continue
+    return res
+
+GLOBAL_MAP_POINTS = """
+You are a helpful assistant responding to questions about data in the tables provided.
+
+
+---Goal---
+
+Generate a response consisting of a list of key points that responds to the user's question, summarizing all relevant information in the input data tables.
+
+You should use the data provided in the data tables below as the primary context for generating the response.
+If you don't know the answer or if the input data tables do not contain sufficient information to provide an answer, just say so. Do not make anything up.
+
+Each key point in the response should have the following element:
+- Description: A comprehensive description of the point.
+- Importance Score: An integer score between 0-100 that indicates how important the point is in answering the user's question. An 'I don't know' type of response should have a score of 0.
+
+The response should be HTML formatted as follows:
+
+
+<point><description>"Description of point 1..."</description><score>score_value</score></point>
+<point><description>"Description of point 2..."</description><score>score_value</score></point>
+
+
+The response shall preserve the original meaning and use of modal verbs such as "shall", "may" or "will".
+Do not include information where the supporting evidence for it is not provided.
+
+
+---Data tables---
+
+{context_data}
+
+---User query---
+
+{query}
+
+---Goal---
+
+Generate a response consisting of a list of key points that responds to the user's question, summarizing all relevant information in the input data tables.
+
+You should use the data provided in the data tables below as the primary context for generating the response.
+If you don't know the answer or if the input data tables do not contain sufficient information to provide an answer, just say so. Do not make anything up.
+
+Each key point in the response should have the following element:
+- Description: A comprehensive description of the point.
+- Importance Score: An integer score between 0-100 that indicates how important the point is in answering the user's question. An 'I don't know' type of response should have a score of 0.
+
+The response shall preserve the original meaning and use of modal verbs such as "shall", "may" or "will".
+Do not include information where the supporting evidence for it is not provided.
+
+The response should be HTML formatted as follows:
+
+<point><description>"Description of point 1..."</description><score>score_value</score></point>
+<point><description>"Description of point 2..."</description><score>score_value</score></point>
+
+
+"""
+```
+
+至此，我们已经完成了社区内容的提取，接着，我们把这些内容传递给 LLM ，LLM 根据这些内容回答用户的问题
+
+```python
+def global_query(self, query, level=1):
+        context = self.build_global_query_context(query, level)
+        prompt = GLOBAL_QUERY.format(query=query, context=context)
+        response = self.llm.predict(prompt)
+        return response
+
+GLOBAL_QUERY = """
+## User Query
+{query}
+## Context
+{context}
+## Task
+Based on given context, please provide a response to the user query.
+## Your Response
+"""
+```
+
+至此，我们就完成了全局查询算法的实现。
+
+
+### 写在最后
+
+恭喜你阅读完此文，你已经充分了解了如何实现一个最小的 GraphRAG 系统以及其背后的思考，但是 GraphRAG 算法仍然存在诸多未解决的问题。比如，由于社区的存在，知识图谱的更删改操作将会变得格外复杂，同时，固定的社区结构也很难适应多样的查询类型，已经有一些研究者在着手改进这些问题，希望大家在学习中也能不断思考，不断进步。
+
+读者们可以运行仓库下的 help.ipynb 文件，体验一下笔者实现的 TinyGraphRAG 系统。
+
+
+## 致谢
+
+
+编写 Tiny-Graphrag 的过程中，我们参考了以下项目，是这些优秀的项目实现帮助我理解了 GraphRAG 算法的实现细节，特此感谢：
+
+[GraphRAG](https://github.com/microsoft/graphrag)
+
+[nano-graphrag](https://github.com/gusye1234/nano-graphrag)
+
+需要说明的是，Tiny-Graphrag 是一个简化版本的 GraphRAG 实现，并不适用于生产环境，如果你需要一个更完整的 GraphRAG 实现，我们建议你使用上述项目。
 

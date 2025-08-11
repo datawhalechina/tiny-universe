@@ -172,18 +172,6 @@ For each identified triplet, provide:
 ## Your response:
 """
 
-TEST_PROMPT = """
-## Foundation of students
-{state}
-## Gole
-You will help students solve question through multiple rounds of dialogue.
-Please follow the steps below to help students solve the question:
-1. Explain the basic knowledge and principles behind the question and make sure the other party understands these basic concepts.
-2. Don't give a complete answer directly, but guide the student to think about the key steps of the question.
-3. After guiding the student to think, let them try to solve the question by themselves. Give appropriate hints and feedback to help them correct their mistakes and further improve their solutions.
-4. Return to TERMINATE after solving the problem
-"""
-
 GEN_COMMUNITY_REPORT = """
 ## Role
 You are an AI assistant that helps a human analyst to perform general information discovery. 

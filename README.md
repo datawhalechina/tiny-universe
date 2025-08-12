@@ -15,6 +15,7 @@
 5. 纯手工搭建 RAG 框架——Tiny RAG
 6. 手搓一个最小的 Agent 系统——Tiny Agent
 7. 深入理解大模型基础——Tiny Transformer
+8. 手搓一个基本的 GraphRAG 系统——Tiny GraphRAG
 
 ## 项目意义
 
@@ -46,6 +47,8 @@
 
 ## *News*
 
+- ***2025.8.12：发布TinyGraphRAG，从零上手GraphRAG！***
+
 - ***2024.12.25：TinyDiffusion，从零上手Diffusion震撼发布！两小时完成图像生成预训练！***
 
 - ***2024.10.28：TinyLlama3，从零上手Llama预训练到加载模型推理，2G显存即可完成！***
@@ -57,6 +60,16 @@
 - ***2024.5.1：发布 Tiny-Universe V1 版本，劳动节帕鲁献礼！***
 
 ## 项目结构
+
+### [*TinyGraphRAG*](./content/TinyGraphRAG/)
+
+&emsp;&emsp;GraphRAG 作为近年来新兴的检索增强生成（RAG）技术，将图结构与大语言模型相结合，在复杂关系推理、知识关联检索等任务中展现出强大的能力。然而，对于初学者来说，GraphRAG 的概念体系庞杂，涉及图数据库、向量检索、图算法与LLM协同等多个环节，从原理到落地实现存在较高的理解门槛。
+
+&emsp;&emsp;***本项目手工搭建了一个最简化版本的 GraphRAG 系统，从原理公式与架构图出发，对应到具体的图构建、检索、推理与生成代码实现，旨在帮助学习者更直观地理解 GraphRAG 的工作机制，掌握数据准备、查询处理、生成整合的完整流程。***
+
+<div aligh=center>
+    <img src="./content/TinyGraphRAG/images/workflow.png" style="width:90%;">
+</div>
 
 ### [*TinyDiffusion*](./content/TinyDiffusion/)
 

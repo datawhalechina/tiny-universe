@@ -149,12 +149,16 @@
 
 ## 致谢
 
-#### 核心贡献者
+#### 项目管理者
 
 - [肖鸿儒-项目负责人](https://github.com/Hongru0306)(Datawhale成员-同济大学)
 - [宋志学-项目负责人](https://github.com/KMnO4-zx)(Datawhale成员-中国矿业大学(北京))
 - [邹雨衡-项目负责人](https://github.com/logan-zou)(Datawhale成员-对外经济贸易大学)
+
+#### 项目贡献者  
 - [刘啸宇-核心贡献者](https://github.com/lxysl)(华中科技大学)
+- [潘笃驿-核心贡献者](https://github.com/lxysl)(香港科技大学(广州))
+- [葛继前](https://github.com/Lukas-Calvin)(同济大学)
 
 #### 其他
 

@@ -77,9 +77,9 @@
 
 &emsp;&emsp;***本项目手工搭建了一个最简化版本的 GraphRAG 系统，从原理公式与架构图出发，对应到具体的图构建、检索、推理与生成代码实现，旨在帮助学习者更直观地理解 GraphRAG 的工作机制，掌握数据准备、查询处理、生成整合的完整流程。***
 
-<div aligh=center>
-    <img src="./content/TinyGraphRAG/images/workflow.png" style="width:70%;">
-</div>
+<p align="center">
+    <img src="./content/TinyGraphRAG/images/workflow.png" style="width:60%;">
+</p>
 
 ### [*TinyDiffusion*](./content/TinyDiffusion/)
 

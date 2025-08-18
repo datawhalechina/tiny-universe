@@ -159,7 +159,7 @@
 
 ## 致谢
 
-#### 项目管理者
+#### 项目创作管理者
 
 - [肖鸿儒-项目负责人](https://github.com/Hongru0306)(Datawhale成员-同济大学)
 - [宋志学-项目负责人](https://github.com/KMnO4-zx)(Datawhale成员-中国矿业大学(北京))

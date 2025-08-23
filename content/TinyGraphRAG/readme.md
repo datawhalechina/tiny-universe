@@ -249,13 +249,13 @@ def split_text(self,file_path:str, segment_length=300, overlap_length=50) -> Dic
             text_segments.append(content[start_index:])
 
         # 为每个片段生成唯一的ID，并将其存储在字典中
-        for segement in text_segments:
+        for segment in text_segments:
             chunks.update({compute_mdhash_id(segement, prefix="chunk-"): segement})
 
         return chunks
 ```
 
-完成分块后，我们即通过 LLM 对每个分块进行解析，得到三元组。LLM 被提示从每个文本块中提取关键实体及其之间的关系。LLM 将首先被提示提取文本中的实体，为实体生成简洁的描述性文本。接着根据当前文本块中的实体，LLM 被提示从文本中提取这些实体之间的关系，同样生成简介的描述性文本，以以下文本块为例：
+完成分块后，我们即通过 LLM 对每个分块进行解析，得到三元组。LLM 被提示从每个文本块中提取关键实体及其之间的关系。LLM 将首先被提示提取文本中的实体，为实体生成简洁的描述性文本。接着根据当前文本块中的实体，LLM 被提示从文本中提取这些实体之间的关系，同样生成简洁的描述性文本，以以下文本块为例：
 
 ```
 在最新的研究中，我们探索了机器学习算法在疾病预测中的潜力。我们使用支持向量机和随机森林算法对医疗数据进行分析。结果表明，这些模型在通过特征选择和交叉验证预测疾病风险方面表现良好。尤其值得一提的是，随机森林模型在处理过拟合问题方面表现出色。此外，我们还探讨了深度学习在医学图像分析中的应用。

@@ -249,13 +249,13 @@ def split_text(self,file_path:str, segment_length=300, overlap_length=50) -> Dic
             text_segments.append(content[start_index:])
 
         # 为每个片段生成唯一的ID，并将其存储在字典中
-        for segement in text_segments:
+        for segment in text_segments:
             chunks.update({compute_mdhash_id(segement, prefix="chunk-"): segement})
 
         return chunks
 ```
 
-完成分块后，我们即通过 LLM 对每个分块进行解析，得到三元组。LLM 被提示从每个文本块中提取关键实体及其之间的关系。LLM 将首先被提示提取文本中的实体，为实体生成简洁的描述性文本。接着根据当前文本块中的实体，LLM 被提示从文本中提取这些实体之间的关系，同样生成简介的描述性文本，以以下文本块为例：
+完成分块后，我们即通过 LLM 对每个分块进行解析，得到三元组。LLM 被提示从每个文本块中提取关键实体及其之间的关系。LLM 将首先被提示提取文本中的实体，为实体生成简洁的描述性文本。接着根据当前文本块中的实体，LLM 被提示从文本中提取这些实体之间的关系，同样生成简洁的描述性文本，以以下文本块为例：
 
 ```
 在最新的研究中，我们探索了机器学习算法在疾病预测中的潜力。我们使用支持向量机和随机森林算法对医疗数据进行分析。结果表明，这些模型在通过特征选择和交叉验证预测疾病风险方面表现良好。尤其值得一提的是，随机森林模型在处理过拟合问题方面表现出色。此外，我们还探讨了深度学习在医学图像分析中的应用。
@@ -398,14 +398,14 @@ The relationship in the triple should accurately reflect the interaction or conn
 1. Article :
     "Gaussian Processes are used to model the objective function in Bayesian Optimization"
    Given entities:
-   [{{"name": "Gaussian Processes", "entity id": "entity-1"}}, {{"name": "Bayesian Optimization", "entity id": "entity-2"}}]
+   [{{"name": "Gaussian Processes", "entity id": "entity-1", "description":"..."}}, {{"name": "Bayesian Optimization", "entity id": "entity-2", "description":"..."}}]
    Output:
    <triplet><subject>Gaussian Processes</subject><subject_id>entity-1</subject_id><predicate>are used to model the objective function in</predicate><object>Bayesian Optimization</object><object_id>entity-2</object_id></triplet>
 
 2. Article :
     "Hydrogen is a colorless, odorless, non-toxic gas and is the lightest and most abundant element in the universe. Oxygen is a gas that supports combustion and is widely present in the Earth's atmosphere. Water is a compound made up of hydrogen and oxygen, with the chemical formula H2O."
     Given entities:
-    [{{"name": "Hydrogen", "entity id": "entity-3"}}, {{"name": "Oxygen", "entity id": "entity-4"}}, {{"name": "Water", "entity id": "entity-5"}}]
+    [{{"name": "Hydrogen", "entity id": "entity-3", "description":"..."}}, {{"name": "Oxygen", "entity id": "entity-4", "description":"..."}}, {{"name": "Water", "entity id": "entity-5", "description":"..."}}]
     Output:
     <triplet><subject>Hydrogen</subject><subject_id>entity-3</subject_id><predicate>is a component of</predicate><object>Water</object><object_id>entity-5</object_id></triplet>
 3. Article :

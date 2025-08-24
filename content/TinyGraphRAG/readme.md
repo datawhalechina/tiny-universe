@@ -335,7 +335,6 @@ Wrap each concept in the HTML tag <concept>, and include the name of the concept
 
 ```
 
-d
 收到 LLM 的回复后，我们还需要进一步解析 LLM 的回复用来得到可用的实体数据，在上面的提示词中，我们要求 LLM 的回复格式为 HTML 格式，因此，我们需要提取指定标签内的内容，这一步我们使用正则表达式来实现。
 
 ```python
@@ -510,9 +509,9 @@ Given multiple entities with the same name, determine if they can be merged into
 ## Example
 1. Entities:
    [
-       {"name": "Entity A", "entity id": "entity-1"},
-       {"name": "Entity A", "entity id": "entity-2"},
-       {"name": "Entity A", "entity id": "entity-3"}
+       {"name": "Entity A", "entity id": "entity-1", "description":"..."},
+       {"name": "Entity A", "entity id": "entity-2", "description":"..."},
+       {"name": "Entity A", "entity id": "entity-3", "description":"..."}
    ]
 
 Your response should be:
@@ -522,9 +521,9 @@ Your response should be:
 
 2. Entities:
    [
-       {"name": "Entity B", "entity id": "entity-4"},
-       {"name": "Entity C", "entity id": "entity-5"},
-       {"name": "Entity B", "entity id": "entity-6"}
+       {"name": "Entity B", "entity id": "entity-4", "description":"..."},
+       {"name": "Entity C", "entity id": "entity-5", "description":"..."},
+       {"name": "Entity B", "entity id": "entity-6", "description":"..."}
    ]
 
 Your response should be:

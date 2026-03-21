@@ -113,6 +113,22 @@ print(llm.predict("Hello, how are you?"))
 
 当观察到 LLM 正确回复后，我们这一模块的构建就完成了。
 
+除了 zhipuai 和 Groq，本项目同样支持 [MiniMax](https://platform.minimax.io) 作为 LLM provider。MiniMax 提供 OpenAI 兼容的 Chat Completions 接口，因此我们可以直接复用 `openai` SDK：
+
+```python
+from tinygraph.llm.minimax import minimaxLLM
+
+llm = minimaxLLM(
+    model_name="MiniMax-M2.7",          # 或 "MiniMax-M2.7-highspeed"
+    api_key="your-minimax-api-key",
+)
+print(llm.predict("Hello, how are you?"))
+```
+
+可用模型：
+- **MiniMax-M2.7**：默认模型，204K 上下文窗口
+- **MiniMax-M2.7-highspeed**：相同能力，更快响应
+
 ### 2. 实现 Embedding 模块
 
 除了调用大模型，我们还需要实现 Embedding 模块，Embedding 模块用于将文本转换为向量，我们将使用向量来表示文档中的信息，这样的好处是，我们可以通过向量的相似度来衡量文档与查询之间的相似度，从而召回对回复用户问题最有帮助的文档。

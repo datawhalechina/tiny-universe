@@ -10,11 +10,12 @@ class minimaxLLM(BaseLLM):
     the ``openai`` SDK with a custom ``base_url``.
 
     Available models:
-        - MiniMax-M2.7 (default)
+        - MiniMax-M3 (default, 512K context, up to 128K output, image input)
+        - MiniMax-M2.7
         - MiniMax-M2.7-highspeed
 
     Args:
-        model_name: Model identifier, e.g. ``"MiniMax-M2.7"``.
+        model_name: Model identifier, e.g. ``"MiniMax-M3"``.
         api_key: MiniMax API key (``MINIMAX_API_KEY``).
         base_url: API base URL. Defaults to the global endpoint
             ``https://api.minimax.io/v1``.  Use
@@ -24,7 +25,7 @@ class minimaxLLM(BaseLLM):
 
     def __init__(
         self,
-        model_name: str = "MiniMax-M2.7",
+        model_name: str = "MiniMax-M3",
         api_key: str = "",
         base_url: str = "https://api.minimax.io/v1",
         model_params: Optional[dict[str, Any]] = None,

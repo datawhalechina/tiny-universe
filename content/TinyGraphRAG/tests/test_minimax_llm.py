@@ -23,7 +23,7 @@ class TestMinimaxLLMInit(unittest.TestCase):
     @patch("tinygraph.llm.minimax.OpenAI")
     def test_default_model_name(self, mock_openai):
         llm = minimaxLLM(api_key="test-key")
-        self.assertEqual(llm.model_name, "MiniMax-M2.7")
+        self.assertEqual(llm.model_name, "MiniMax-M3")
 
     @patch("tinygraph.llm.minimax.OpenAI")
     def test_custom_model_name(self, mock_openai):
@@ -86,11 +86,11 @@ class TestMinimaxLLMPredict(unittest.TestCase):
         mock_response.choices = [mock_choice]
         mock_client.chat.completions.create.return_value = mock_response
 
-        llm = minimaxLLM(model_name="MiniMax-M2.7", api_key="test-key")
+        llm = minimaxLLM(api_key="test-key")
         llm.predict("test input")
 
         mock_client.chat.completions.create.assert_called_once_with(
-            model="MiniMax-M2.7",
+            model="MiniMax-M3",
             messages=[{"role": "user", "content": "test input"}],
         )
 

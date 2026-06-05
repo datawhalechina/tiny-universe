@@ -119,15 +119,16 @@ print(llm.predict("Hello, how are you?"))
 from tinygraph.llm.minimax import minimaxLLM
 
 llm = minimaxLLM(
-    model_name="MiniMax-M2.7",          # 或 "MiniMax-M2.7-highspeed"
+    model_name="MiniMax-M3",            # 或 "MiniMax-M2.7" / "MiniMax-M2.7-highspeed"
     api_key="your-minimax-api-key",
 )
 print(llm.predict("Hello, how are you?"))
 ```
 
 可用模型：
-- **MiniMax-M2.7**：默认模型，204K 上下文窗口
-- **MiniMax-M2.7-highspeed**：相同能力，更快响应
+- **MiniMax-M3**：默认模型，512K 上下文，最大输出 128K，支持图片输入
+- **MiniMax-M2.7**：上一代模型
+- **MiniMax-M2.7-highspeed**：上一代低延迟版本
 
 ### 2. 实现 Embedding 模块
 

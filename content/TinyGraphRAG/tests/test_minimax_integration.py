@@ -19,6 +19,14 @@ SKIP_REASON = "MINIMAX_API_KEY not set"
 class TestMinimaxLLMIntegration(unittest.TestCase):
     """Live API integration tests."""
 
+    def test_predict_m3(self):
+        from tinygraph.llm.minimax import minimaxLLM
+
+        llm = minimaxLLM(model_name="MiniMax-M3", api_key=MINIMAX_API_KEY)
+        result = llm.predict("Say 'hello' and nothing else.")
+        self.assertIsInstance(result, str)
+        self.assertGreater(len(result), 0)
+
     def test_predict_m27(self):
         from tinygraph.llm.minimax import minimaxLLM
 

@@ -223,6 +223,94 @@ class TinyGraph:
 
         return res
 
+    def _disambiguate_entities(
+        self, all_entities: List[Dict], all_triplets: List[Dict], use_llm: bool
+    ) -> Tuple[List[Dict], List[Dict]]:
+        """Resolve duplicate entities and keep entity and triplet IDs consistent."""
+        entity_id_mapping = {}
+
+        if use_llm:
+            entity_id_mapping = {
+                entity["entity id"]: entity["entity id"] for entity in all_entities
+            }
+            entity_names = sorted(set(entity["name"] for entity in all_entities))
+
+            for name in entity_names:
+                same_name_entities = [
+                    entity for entity in all_entities if entity["name"] == name
+                ]
+                if len(same_name_entities) < 2:
+                    continue
+
+                transform_text = self.llm.predict(
+                    ENTITY_DISAMBIGUATION.format(entities=same_name_entities)
+                )
+                transformations = get_text_inside_tag(
+                    transform_text, "transformation"
+                )
+                if len(transformations) != 1:
+                    raise ValueError(
+                        "Entity disambiguation response must contain exactly one "
+                        "<transformation> tag."
+                    )
+
+                transformation_text = transformations[0].strip()
+                if transformation_text.lower() == "none":
+                    continue
+
+                try:
+                    transformation = json.loads(transformation_text)
+                except json.JSONDecodeError as error:
+                    raise ValueError(
+                        "Entity disambiguation transformation must be valid JSON."
+                    ) from error
+
+                if not isinstance(transformation, dict) or not all(
+                    isinstance(source_id, str) and isinstance(target_id, str)
+                    for source_id, target_id in transformation.items()
+                ):
+                    raise ValueError(
+                        "Entity disambiguation transformation must map string IDs "
+                        "to string IDs."
+                    )
+
+                group_ids = {
+                    entity["entity id"] for entity in same_name_entities
+                }
+                unknown_ids = (
+                    set(transformation)
+                    | set(transformation.values())
+                ) - group_ids
+                if unknown_ids:
+                    raise ValueError(
+                        "Entity disambiguation transformation contains unknown "
+                        f"entity IDs: {sorted(unknown_ids)}"
+                    )
+
+                entity_id_mapping.update(transformation)
+        else:
+            canonical_ids = {}
+            for entity in all_entities:
+                canonical_id = canonical_ids.setdefault(
+                    entity["name"], entity["entity id"]
+                )
+                entity_id_mapping[entity["entity id"]] = canonical_id
+
+        for entity in all_entities:
+            entity["entity id"] = entity_id_mapping.get(
+                entity["entity id"], entity["entity id"]
+            )
+
+        for triplet in all_triplets:
+            triplet["subject_id"] = entity_id_mapping.get(
+                triplet["subject_id"], triplet["subject_id"]
+            )
+            triplet["object_id"] = entity_id_mapping.get(
+                triplet["object_id"], triplet["object_id"]
+            )
+
+        return all_entities, all_triplets
+
     def add_document(self, filepath, use_llm_deambiguation=False) -> None:
         """
         将文档添加到系统中，执行以下步骤：
@@ -281,53 +369,9 @@ class TinyGraph:
             f"{len(all_entities)} entities and {len(all_triplets)} triplets have been extracted."
         )
         # ================ Entity Disambiguation ================
-        entity_names = list(set(entity["name"] for entity in all_entities))
-
-        if use_llm_deambiguation:
-            entity_id_mapping = {}
-            for name in entity_names:
-                same_name_entities = [
-                    entity for entity in all_entities if entity["name"] == name
-                ]
-                transform_text = self.llm.predict(
-                    ENTITY_DISAMBIGUATION.format(same_name_entities)
-                )
-                entity_id_mapping.update(
-                    get_text_inside_tag(transform_text, "transform")
-                )
-        else:
-            entity_id_mapping = {}
-            for entity in all_entities:
-                entity_name = entity["name"]
-                if entity_name not in entity_id_mapping:
-                    entity_id_mapping[entity_name] = entity["entity id"]
-
-        for entity in all_entities:
-            entity["entity id"] = entity_id_mapping.get(
-                entity["name"], entity["entity id"]
-            )
-
-        triplets_to_remove = [
-            triplet
-            for triplet in all_triplets
-            if entity_id_mapping.get(triplet["subject"], triplet["subject_id"]) is None
-            or entity_id_mapping.get(triplet["object"], triplet["object_id"]) is None
-        ]
-
-        updated_triplets = [
-            {
-                **triplet,
-                "subject_id": entity_id_mapping.get(
-                    triplet["subject"], triplet["subject_id"]
-                ),
-                "object_id": entity_id_mapping.get(
-                    triplet["object"], triplet["object_id"]
-                ),
-            }
-            for triplet in all_triplets
-            if triplet not in triplets_to_remove
-        ]
-        all_triplets = updated_triplets
+        all_entities, all_triplets = self._disambiguate_entities(
+            all_entities, all_triplets, use_llm_deambiguation
+        )
 
         # ================ Merge Entities ================
         entity_map = {}

@@ -89,21 +89,21 @@ Given multiple entities with the same name, determine if they can be merged into
 ## Example
 1. Entities:
    [
-       {"name": "Entity A", "entity id": "entity-1"},
-       {"name": "Entity A", "entity id": "entity-2"},
-       {"name": "Entity A", "entity id": "entity-3"}
+       {{"name": "Entity A", "entity id": "entity-1"}},
+       {{"name": "Entity A", "entity id": "entity-2"}},
+       {{"name": "Entity A", "entity id": "entity-3"}}
    ]
    
 Your response should be:
 
-<transformation>{"entity-2": "entity-1", "entity-3": "entity-1"}</transformation>
+<transformation>{{"entity-2": "entity-1", "entity-3": "entity-1"}}</transformation>
 
 
 2. Entities:
    [
-       {"name": "Entity B", "entity id": "entity-4"},
-       {"name": "Entity C", "entity id": "entity-5"},
-       {"name": "Entity B", "entity id": "entity-6"}
+       {{"name": "Entity B", "entity id": "entity-4"}},
+       {{"name": "Entity C", "entity id": "entity-5"}},
+       {{"name": "Entity B", "entity id": "entity-6"}}
    ]
 
 Your response should be:

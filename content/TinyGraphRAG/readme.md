@@ -509,21 +509,21 @@ Given multiple entities with the same name, determine if they can be merged into
 ## Example
 1. Entities:
    [
-       {"name": "Entity A", "entity id": "entity-1", "description":"..."},
-       {"name": "Entity A", "entity id": "entity-2", "description":"..."},
-       {"name": "Entity A", "entity id": "entity-3", "description":"..."}
+       {{"name": "Entity A", "entity id": "entity-1", "description":"..."}},
+       {{"name": "Entity A", "entity id": "entity-2", "description":"..."}},
+       {{"name": "Entity A", "entity id": "entity-3", "description":"..."}}
    ]
 
 Your response should be:
 
-<transformation>{"entity-2": "entity-1", "entity-3": "entity-1"}</transformation>
+<transformation>{{"entity-2": "entity-1", "entity-3": "entity-1"}}</transformation>
 
 
 2. Entities:
    [
-       {"name": "Entity B", "entity id": "entity-4", "description":"..."},
-       {"name": "Entity C", "entity id": "entity-5", "description":"..."},
-       {"name": "Entity B", "entity id": "entity-6", "description":"..."}
+       {{"name": "Entity B", "entity id": "entity-4", "description":"..."}},
+       {{"name": "Entity C", "entity id": "entity-5", "description":"..."}},
+       {{"name": "Entity B", "entity id": "entity-6", "description":"..."}}
    ]
 
 Your response should be:
@@ -541,59 +541,82 @@ Provide the following information:
 """
 ```
 
-如上大模型回复我们，告知我们哪些实体可以被相似的实体取代，例如实体 1 可以被实体 2 取代，那么大模型将回复 <transformation>{"entity-1": "entity-2"}</transformation>， 我们可以通过这个字典结构，将所有需要被取代的实体的 ID 更新为取代实体的 ID。
+如上大模型回复我们，告知我们哪些实体可以被相似的实体取代，例如实体 1 可以被实体 2 取代，那么大模型将回复 `<transformation>{"entity-1": "entity-2"}</transformation>`。标签内是 JSON 字典，因此需要先提取 `transformation` 标签并用 `json.loads` 解析，再根据实体 ID 更新实体及三元组。若回复为 `<transformation>None</transformation>`，则保留这一组实体各自原有的 ID。
 
 ```python
-entity_names = list(set(entity["name"] for entity in all_entities))
+def _disambiguate_entities(
+    self, all_entities: List[Dict], all_triplets: List[Dict], use_llm: bool
+) -> Tuple[List[Dict], List[Dict]]:
+    entity_id_mapping = {}
 
-if use_llm_deambiguation:
-    entity_id_mapping = {}
-    for name in entity_names:
-        same_name_entities = [
-            entity for entity in all_entities if entity["name"] == name
-        ]
-        transform_text = self.llm.predict(
-            ENTITY_DISAMBIGUATION.format(same_name_entities)
-        )
-        entity_id_mapping.update(
-            get_text_inside_tag(transform_text, "transform")
-        )
-else:
-    entity_id_mapping = {}
+    if use_llm:
+        entity_id_mapping = {
+            entity["entity id"]: entity["entity id"] for entity in all_entities
+        }
+        entity_names = sorted(set(entity["name"] for entity in all_entities))
+
+        for name in entity_names:
+            same_name_entities = [
+                entity for entity in all_entities if entity["name"] == name
+            ]
+            if len(same_name_entities) < 2:
+                continue
+
+            transform_text = self.llm.predict(
+                ENTITY_DISAMBIGUATION.format(entities=same_name_entities)
+            )
+            transformations = get_text_inside_tag(
+                transform_text, "transformation"
+            )
+            if len(transformations) != 1:
+                raise ValueError(
+                    "Entity disambiguation response must contain exactly one "
+                    "<transformation> tag."
+                )
+
+            transformation_text = transformations[0].strip()
+            if transformation_text.lower() == "none":
+                continue
+
+            transformation = json.loads(transformation_text)
+            group_ids = {
+                entity["entity id"] for entity in same_name_entities
+            }
+            unknown_ids = (
+                set(transformation) | set(transformation.values())
+            ) - group_ids
+            if unknown_ids:
+                raise ValueError(
+                    "Entity disambiguation transformation contains unknown "
+                    f"entity IDs: {sorted(unknown_ids)}"
+                )
+
+            entity_id_mapping.update(transformation)
+    else:
+        canonical_ids = {}
+        for entity in all_entities:
+            canonical_id = canonical_ids.setdefault(
+                entity["name"], entity["entity id"]
+            )
+            entity_id_mapping[entity["entity id"]] = canonical_id
+
     for entity in all_entities:
-        entity_name = entity["name"]
-        if entity_name not in entity_id_mapping:
-            entity_id_mapping[entity_name] = entity["entity id"]
+        entity["entity id"] = entity_id_mapping.get(
+            entity["entity id"], entity["entity id"]
+        )
 
-for entity in all_entities:
-    entity["entity id"] = entity_id_mapping.get(
-        entity["name"], entity["entity id"]
-    )
+    for triplet in all_triplets:
+        triplet["subject_id"] = entity_id_mapping.get(
+            triplet["subject_id"], triplet["subject_id"]
+        )
+        triplet["object_id"] = entity_id_mapping.get(
+            triplet["object_id"], triplet["object_id"]
+        )
 
-triplets_to_remove = [
-    triplet
-    for triplet in all_triplets
-    if entity_id_mapping.get(triplet["subject"], triplet["subject_id"]) is None
-    or entity_id_mapping.get(triplet["object"], triplet["object_id"]) is None
-]
-
-updated_triplets = [
-    {
-        **triplet,
-        "subject_id": entity_id_mapping.get(
-            triplet["subject"], triplet["subject_id"]
-        ),
-        "object_id": entity_id_mapping.get(
-            triplet["object"], triplet["object_id"]
-        ),
-    }
-    for triplet in all_triplets
-    if triplet not in triplets_to_remove
-]
-all_triplets = updated_triplets
+    return all_entities, all_triplets
 ```
 
-完成实体消岐后，我们就可以开始合并同一实体的信息了，我们把三元组中的实体 ID 更新为消岐后的 ID，接着我们合并同一实体的描述信息，以及它们所属的文本块 ID 。
+这里统一维护“原实体 ID → 最终实体 ID”的映射。这样无论是否启用 LLM 消歧，实体和三元组都使用同一套 ID 更新规则；同时只对同名的多个实体调用 LLM，避免为单个实体产生不必要的请求。完成实体消岐后，我们就可以开始合并同一实体的信息了，我们把三元组中的实体 ID 更新为消岐后的 ID，接着我们合并同一实体的描述信息，以及它们所属的文本块 ID。
 
 ```python
 entity_map = {}
@@ -1322,4 +1345,3 @@ Based on given context, please provide a response to the user query.
 [nano-graphrag](https://github.com/gusye1234/nano-graphrag)
 
 需要说明的是，Tiny-Graphrag 是一个简化版本的 GraphRAG 实现，并不适用于生产环境，如果你需要一个更完整的 GraphRAG 实现，我们建议你使用上述项目。
-

@@ -371,7 +371,10 @@ def get_entity(self, text: str, chunk_id: str) -> List[Dict]:
             ].strip()
             concept["chunks id"] = [chunk_id]
             concept["entity id"] = compute_mdhash_id(
-                concept["description"], prefix="entity-"
+                json.dumps(
+                    [concept["name"], concept["description"]], ensure_ascii=False
+                ),
+                prefix="entity-",
             )
             concepts.append(concept)
 
@@ -547,6 +550,21 @@ Provide the following information:
 def _disambiguate_entities(
     self, all_entities: List[Dict], all_triplets: List[Dict], use_llm: bool
 ) -> Tuple[List[Dict], List[Dict]]:
+    entity_names_by_id = defaultdict(set)
+    for entity in all_entities:
+        entity_names_by_id[entity["entity id"]].add(entity["name"])
+
+    conflicting_ids = {
+        entity_id: sorted(names)
+        for entity_id, names in entity_names_by_id.items()
+        if len(names) > 1
+    }
+    if conflicting_ids:
+        raise ValueError(
+            "Entity IDs must not be shared by different entity names: "
+            f"{conflicting_ids}"
+        )
+
     entity_id_mapping = {}
 
     if use_llm:
@@ -616,7 +634,7 @@ def _disambiguate_entities(
     return all_entities, all_triplets
 ```
 
-这里统一维护“原实体 ID → 最终实体 ID”的映射。这样无论是否启用 LLM 消歧，实体和三元组都使用同一套 ID 更新规则；同时只对同名的多个实体调用 LLM，避免为单个实体产生不必要的请求。完成实体消岐后，我们就可以开始合并同一实体的信息了，我们把三元组中的实体 ID 更新为消岐后的 ID，接着我们合并同一实体的描述信息，以及它们所属的文本块 ID。
+实体 ID 由名称和描述共同生成，避免不同名称恰好具有相同描述时共享 ID。消歧入口还会拒绝跨名称复用的 ID，防止旧数据或手工输入被静默错误合并。这里统一维护“原实体 ID → 最终实体 ID”的映射。这样无论是否启用 LLM 消歧，实体和三元组都使用同一套 ID 更新规则；同时只对同名的多个实体调用 LLM，避免为单个实体产生不必要的请求。完成实体消岐后，我们就可以开始合并同一实体的信息了，我们把三元组中的实体 ID 更新为消岐后的 ID，接着我们合并同一实体的描述信息，以及它们所属的文本块 ID。
 
 ```python
 entity_map = {}

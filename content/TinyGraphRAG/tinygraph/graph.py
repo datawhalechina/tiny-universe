@@ -173,7 +173,10 @@ class TinyGraph:
             ].strip()
             concept["chunks id"] = [chunk_id]
             concept["entity id"] = compute_mdhash_id(
-                concept["description"], prefix="entity-"
+                json.dumps(
+                    [concept["name"], concept["description"]], ensure_ascii=False
+                ),
+                prefix="entity-",
             )
             concepts.append(concept)
 
@@ -227,6 +230,21 @@ class TinyGraph:
         self, all_entities: List[Dict], all_triplets: List[Dict], use_llm: bool
     ) -> Tuple[List[Dict], List[Dict]]:
         """Resolve duplicate entities and keep entity and triplet IDs consistent."""
+        entity_names_by_id = defaultdict(set)
+        for entity in all_entities:
+            entity_names_by_id[entity["entity id"]].add(entity["name"])
+
+        conflicting_ids = {
+            entity_id: sorted(names)
+            for entity_id, names in entity_names_by_id.items()
+            if len(names) > 1
+        }
+        if conflicting_ids:
+            raise ValueError(
+                "Entity IDs must not be shared by different entity names: "
+                f"{conflicting_ids}"
+            )
+
         entity_id_mapping = {}
 
         if use_llm:

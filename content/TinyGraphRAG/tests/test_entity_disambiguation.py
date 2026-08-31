@@ -52,6 +52,24 @@ class EntityDisambiguationTest(unittest.TestCase):
         graph.llm = FakeLLM(response)
         return graph
 
+    def test_entity_ids_include_name_and_description(self):
+        graph = self.make_graph(
+            """
+            <concept>
+                <name>Alice</name>
+                <description>A researcher</description>
+            </concept>
+            <concept>
+                <name>Bob</name>
+                <description>A researcher</description>
+            </concept>
+            """
+        )
+
+        entities = graph.get_entity("ignored", "chunk-1")
+
+        self.assertNotEqual(entities[0]["entity id"], entities[1]["entity id"])
+
     def test_llm_mapping_updates_entities_and_triplets(self):
         graph = self.make_graph(
             '<transformation>{"entity-2": "entity-1"}</transformation>'
@@ -92,6 +110,18 @@ class EntityDisambiguationTest(unittest.TestCase):
             graph._disambiguate_entities(
                 copy.deepcopy(ENTITIES), copy.deepcopy(TRIPLETS), use_llm=True
             )
+
+    def test_ids_shared_by_different_names_are_rejected(self):
+        graph = self.make_graph("")
+        conflicting_entities = copy.deepcopy(ENTITIES)
+        conflicting_entities[2]["entity id"] = "entity-1"
+
+        with self.assertRaisesRegex(ValueError, "different entity names"):
+            graph._disambiguate_entities(
+                conflicting_entities, copy.deepcopy(TRIPLETS), use_llm=True
+            )
+
+        self.assertEqual([], graph.llm.prompts)
 
     def test_default_mode_merges_same_name_using_first_id(self):
         graph = self.make_graph("")
